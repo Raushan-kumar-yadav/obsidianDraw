@@ -32,6 +32,11 @@ const context = await esbuild.context({
 		'@lezer/lr',
 		...builtinModules,
 	],
+	jsx: 'automatic',
+	jsxImportSource: 'react',
+	loader: {
+		'.css': 'text',
+	},
 	format: 'cjs',
 	target: 'es2021',
 	logLevel: 'info',

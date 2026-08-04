@@ -1,8 +1,120 @@
-/*
+ 
+.obsidian-draw__preview {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  overflow: visible;  
+   max-width: 100%;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  background: var(--background-primary);
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.obsidian-draw__preview:hover {
+  border-color: var(--interactive-accent);
+}
 
-If your plugin does not need CSS, delete this file.
+ 
+ .obsidian-draw__preview-glow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  filter: blur(40px) saturate(1.5) brightness(0.8);
+  opacity: 0.6;
+  z-index: 0;
+  pointer-events: none;
+  transform: scale(1.08);
+  border-radius: 8px;
+  transition: opacity 0.3s ease;
+}
 
-*/
+.obsidian-draw__preview:hover .obsidian-draw__preview-glow {
+  opacity: 0.85;
+}
+
+ 
+.obsidian-draw__preview-img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+ 
+.obsidian-draw__preview-hover-hint {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.obsidian-draw__preview:hover .obsidian-draw__preview-hover-hint {
+  opacity: 1;
+}
+
+ 
+.obsidian-draw__preview-loading {
+  padding: 24px 48px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+ 
+.obsidian-draw__preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 64px;
+  color: var(--text-muted);
+}
+
+.obsidian-draw__preview-empty-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.obsidian-draw__preview-empty-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+ 
+.modal.obsidian-draw__modal {
+  width: 85vw;
+  max-width: 85vw;
+  height: 85vh;
+  max-height: 85vh;
+}
+
+.obsidian-draw__modal-body {
+  height: 100%;
+  position: relative;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.obsidian-draw__modal-body .excalidraw {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.obsidian-draw__modal-body .excalidraw canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
