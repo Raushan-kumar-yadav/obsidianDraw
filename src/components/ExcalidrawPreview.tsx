@@ -52,11 +52,21 @@ export function ExcalidrawPreview({ elements, appState, onEdit }: ExcalidrawPrev
 	return (
 		<div
 			className="obsidian-draw__preview"
-			onClick={onEdit}
+			onClick={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				onEdit();
+			}}
 			role="button"
 			tabIndex={0}
 			aria-label="Click to open drawing editor"
-			onKeyDown={(e) => e.key === 'Enter' && onEdit()}
+			onKeyDown={(e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					e.stopPropagation();
+					onEdit();
+				}
+			}}
 		>
 			{loading && (
 				<div className="obsidian-draw__preview-loading">Rendering…</div>
@@ -64,13 +74,14 @@ export function ExcalidrawPreview({ elements, appState, onEdit }: ExcalidrawPrev
 
 			{!loading && previewUrl && (
 				<>
-				 
+
 					<img
 						src={previewUrl}
 						alt="Drawing preview"
 						className="obsidian-draw__preview-img"
 					/>
 					<div className="obsidian-draw__preview-hover-hint">✏️ Edit</div>
+ 					<div style={{ position: 'absolute', inset: 0, zIndex: 3 }} />
 				</>
 			)}
 

@@ -9,6 +9,7 @@ import type ObsidianDrawPlugin from '../main';
 export class ExcalidrawLiveWidget extends WidgetType {
 	private reactRoot: Root | null = null;
 	private elements: readonly ExcalidrawElement[] = [];
+	private appState: any = {};
 	private initialData: object | null = null;
 
 	constructor(
@@ -40,9 +41,10 @@ export class ExcalidrawLiveWidget extends WidgetType {
 	private parseSource(source: string): void {
 		if (!source.trim()) return;
 		try {
-			const parsed = JSON.parse(source) as { elements?: ExcalidrawElement[] };
+			const parsed = JSON.parse(source) as { elements?: ExcalidrawElement[], appState?: any };
 			this.initialData = parsed;
 			this.elements = parsed.elements ?? [];
+			this.appState = parsed.appState ?? {};
 		} catch (e) {
 			console.error('[ObsidianDraw] LiveWidget: failed to parse JSON:', e);
 		}
@@ -53,6 +55,7 @@ export class ExcalidrawLiveWidget extends WidgetType {
 		this.reactRoot.render(
 			<ExcalidrawPreview
 				elements={this.elements}
+				appState={this.appState}
 				onEdit={this.openModal}
 			/>,
 		);

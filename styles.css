@@ -14,26 +14,6 @@
 }
 
  
- .obsidian-draw__preview-glow {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  filter: blur(40px) saturate(1.5) brightness(0.8);
-  opacity: 0.6;
-  z-index: 0;
-  pointer-events: none;
-  transform: scale(1.08);
-  border-radius: 8px;
-  transition: opacity 0.3s ease;
-}
-
-.obsidian-draw__preview:hover .obsidian-draw__preview-glow {
-  opacity: 0.85;
-}
-
- 
 .obsidian-draw__preview-img {
   position: relative;
   z-index: 1;
