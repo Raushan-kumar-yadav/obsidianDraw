@@ -30,21 +30,39 @@ export class ExcalidrawModal extends Modal {
 		contentEl.empty();
 		contentEl.addClass('obsidian-draw__modal-body');
 
- 		const isDark = document.body.classList.contains('theme-dark');
+		this.reactRoot = createRoot(contentEl);
+		this.renderReact();
+	}
+
+	private renderReact = () => {
+		if (!this.reactRoot) return;
+		const isDark = document.body.classList.contains('theme-dark');
 		const theme = isDark ? 'dark' : 'light';
 
-		this.reactRoot = createRoot(contentEl);
 		this.reactRoot.render(
 			<ExcalidrawWrapper
- 				initialData={this.initialData as any}
+				initialData={this.initialData as any}
 				onSave={this.handleSave}
 				onExcalidrawAPI={(api) => {
 					this.excalidrawApi = api;
 				}}
 				theme={theme}
+				transparentBackground={this.plugin.settings.transparentBackground}
+				onToggleTransparentBackground={async (val) => {
+					this.plugin.settings.transparentBackground = val;
+					await this.plugin.saveSettings();
+					
+ 					if (this.excalidrawApi) {
+						this.excalidrawApi.updateScene({
+							appState: { viewBackgroundColor: val ? '#00000000' : '#ffffff' }
+						});
+					}
+					
+					this.renderReact();
+				}}
 			/>,
 		);
-	}
+	};
 
 	onClose(): void {
  		if (this.excalidrawApi) {
@@ -69,8 +87,7 @@ export class ExcalidrawModal extends Modal {
 		appState: AppState,
 		_files: BinaryFiles,
 	): void => {
-		// Only save relevant appState properties to avoid bloating the markdown file
-		const savedAppState = {
+ 		const savedAppState = {
 			viewBackgroundColor: appState.viewBackgroundColor,
 		};
 		const newJson = JSON.stringify({ elements, appState: savedAppState }, null, 2);

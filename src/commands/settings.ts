@@ -2,11 +2,11 @@ import { App, PluginSettingTab, Setting } from 'obsidian';
 import MyPlugin from '../main';
 
 export interface MyPluginSettings {
-	mySetting: string;
+	transparentBackground: boolean;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default',
+	transparentBackground: true,
 };
 
 export class SampleSettingTab extends PluginSettingTab {
@@ -23,14 +23,13 @@ export class SampleSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Settings #1')
-			.setDesc("It's a secret")
-			.addText((text) =>
-				text
-					.setPlaceholder('Enter your secret')
-					.setValue(this.plugin.settings.mySetting)
+			.setName('Transparent background')
+			.setDesc('Force a transparent background and disable the canvas background color picker.')
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.transparentBackground)
 					.onChange(async (value) => {
-						this.plugin.settings.mySetting = value;
+						this.plugin.settings.transparentBackground = value;
 						await this.plugin.saveSettings();
 					}),
 			);
