@@ -49,4 +49,34 @@ export default class ObsidianDrawPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+
+	async loadLibraryItems(): Promise<any[]> {
+		const folderPath = `${this.manifest.dir}/libraries`;
+		const adapter = this.app.vault.adapter;
+
+		if (!(await adapter.exists(folderPath))) {
+			return [];
+		}
+
+		const listed = await adapter.list(folderPath);
+		const files = listed.files.filter((f) => f.endsWith('.excalidrawlib'));
+
+		let allLibraryItems: any[] = [];
+		for (const file of files) {
+			try {
+				const content = await adapter.read(file);
+				const parsed = JSON.parse(content);
+				if (parsed && Array.isArray(parsed.libraryItems)) {
+					allLibraryItems = allLibraryItems.concat(parsed.libraryItems);
+				} else if (parsed && Array.isArray(parsed.library)) {
+					// Handle older format
+					allLibraryItems = allLibraryItems.concat(parsed.library);
+				}
+			} catch (e) {
+				console.error(`[ObsidianDraw] Failed to parse library file ${file}:`, e);
+			}
+		}
+
+		return allLibraryItems;
+	}
 }
