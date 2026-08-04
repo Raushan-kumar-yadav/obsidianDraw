@@ -66,10 +66,14 @@ export class ExcalidrawModal extends Modal {
 	 
 	private handleSave = (
 		elements: readonly ExcalidrawElement[],
-		_appState: AppState,
+		appState: AppState,
 		_files: BinaryFiles,
 	): void => {
-		const newJson = JSON.stringify({ elements }, null, 2);
+		// Only save relevant appState properties to avoid bloating the markdown file
+		const savedAppState = {
+			viewBackgroundColor: appState.viewBackgroundColor,
+		};
+		const newJson = JSON.stringify({ elements, appState: savedAppState }, null, 2);
 		if (newJson === this.lastSavedJson) return;
 
 		const activeFile = this.plugin.app.workspace.getActiveFile();

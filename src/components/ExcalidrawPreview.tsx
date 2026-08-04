@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import { exportToCanvas } from '@excalidraw/excalidraw';
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
+import type { AppState } from '@excalidraw/excalidraw/dist/types/excalidraw/types';
 
 interface ExcalidrawPreviewProps {
  	elements: readonly ExcalidrawElement[];
+ 	appState?: Partial<AppState>;
  	onEdit: () => void;
 }
 
  
-export function ExcalidrawPreview({ elements, onEdit }: ExcalidrawPreviewProps) {
+export function ExcalidrawPreview({ elements, appState, onEdit }: ExcalidrawPreviewProps) {
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
-		// Filter out deleted elements  
+		// Filter out deleted elements before rendering
 		const active = (elements ?? []).filter((el) => !el.isDeleted);
 		if (active.length === 0) {
 			setPreviewUrl(null);
@@ -22,7 +24,7 @@ export function ExcalidrawPreview({ elements, onEdit }: ExcalidrawPreviewProps) 
 
 		setLoading(true);
 
-		// current theme for the thumbnail
+		// Match Obsidian's current theme for the thumbnail
 		const isDark = document.body.classList.contains('theme-dark');
 
 		exportToCanvas({
@@ -30,6 +32,7 @@ export function ExcalidrawPreview({ elements, onEdit }: ExcalidrawPreviewProps) 
 			appState: {
 				exportWithDarkMode: isDark,
 				exportBackground: true,
+				viewBackgroundColor: appState?.viewBackgroundColor,
 			},
 			files: null,
 			maxWidthOrHeight: 600,
@@ -43,8 +46,8 @@ export function ExcalidrawPreview({ elements, onEdit }: ExcalidrawPreviewProps) 
 				setPreviewUrl(null);
 			})
 			.finally(() => setLoading(false));
-	// update on element update 
-	}, [elements]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [elements, appState]);
 
 	return (
 		<div

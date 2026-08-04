@@ -3,12 +3,14 @@ import { createRoot, Root } from 'react-dom/client';
 import { ExcalidrawPreview } from '../components/ExcalidrawPreview';
 import { ExcalidrawModal } from './ExcalidrawModal';
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
+import type { AppState } from '@excalidraw/excalidraw/dist/types/excalidraw/types';
 import type ObsidianDrawPlugin from '../main';
 
  
 export class ExcalidrawRenderChild extends MarkdownRenderChild {
 	private reactRoot: Root | null = null;
 	private elements: readonly ExcalidrawElement[] = [];
+	private appState: Partial<AppState> = {};
 	private initialData: object | null = null;
 
 	constructor(
@@ -38,9 +40,10 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 	private parseSource(source: string): void {
 		if (!source.trim()) return;
 		try {
-			const parsed = JSON.parse(source) as { elements?: ExcalidrawElement[] };
+			const parsed = JSON.parse(source) as { elements?: ExcalidrawElement[], appState?: Partial<AppState> };
 			this.initialData = parsed;
 			this.elements = parsed.elements ?? [];
+			this.appState = parsed.appState ?? {};
 		} catch (e) {
 			console.error('[ObsidianDraw] RenderChild: failed to parse JSON:', e);
 		}
@@ -51,6 +54,7 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 		this.reactRoot.render(
 			<ExcalidrawPreview
 				elements={this.elements}
+				appState={this.appState}
 				onEdit={this.openModal}
 			/>,
 		);
