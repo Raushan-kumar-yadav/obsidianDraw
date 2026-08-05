@@ -13,7 +13,7 @@ Embed interactive drawings, system architecture diagrams, mind maps, and sketche
 
 <br/>
 
-![CanvasDraw Inline Canvas Preview](./assets/inline-preview.png)
+![CanvasDraw inline drawing in Obsidian note](./assets/inline-preview1.png)
 
 </div>
 
@@ -21,45 +21,49 @@ Embed interactive drawings, system architecture diagrams, mind maps, and sketche
 
 ## ✨ Features at a Glance
 
-- 📝 **Native Markdown Code Blocks** — Diagrams are stored directly within ` ```excalidraw ` code blocks in your note files.
-- ⚡ **Instant Click-to-Edit Modal** — Click any drawing thumbnail to open the full-screen Excalidraw editor modal.
-- 🖼️ **Image & Asset Support** — Paste or drag screenshots and images into your drawing; binary assets are automatically stored locally in your vault's `content/` folder without cluttering markdown.
-- 📚 **Excalidraw Libraries & Custom Imports** — Full support to import `.excalidrawlib` files via the Library panel.
-- 🔍 **Interactive Canvas & Zoom Controls** — Hover to reveal smooth `+` / `−` zoom buttons and a corner resize handle.
-- 💾 **Per-Block Layout Persistence** — Canvas height and zoom level are saved directly inside each block's JSON metadata, preserving your exact viewport per drawing.
-- 🌗 **Automatic Theme Sync** — Seamlessly adapts to Obsidian's Light and Dark themes.
-- 🪟 **Transparent Background Mode** — Optional setting to render diagrams transparently for seamless note blending.
+- 📝 **Native Markdown Code Blocks** — Diagrams stored directly inside ` ```excalidraw ` code blocks in your note files.
+- ⚡ **Instant Click-to-Edit Modal** — Click any drawing thumbnail to open the full-screen Excalidraw editor.
+- 🖼️ **Image & Asset Support** — Paste or drag images into your drawing; assets are saved automatically in your vault's `content/` folder.
+- 📚 **Library Panel & Custom Imports** — Import `.excalidrawlib` files and browse pre-built elements from the Library sidebar.
+- 🔍 **Interactive Canvas & Zoom Controls** — Hover to reveal `+` / `−` zoom buttons and a corner resize handle.
+- 💾 **Per-Block Layout Persistence** — Canvas height and zoom level saved inside each block's JSON, preserving your exact viewport.
+- 🌗 **Automatic Theme Sync** — Adapts to Obsidian's Light and Dark themes seamlessly.
+- 🪟 **Transparent Background Mode** — Render diagrams with a transparent background for seamless note blending.
 - ⌨️ **Command Palette Integration** — Fast commands to insert, edit, clear, and delete drawing blocks.
 
 ---
 
 ## 📸 Feature Tour
 
-### 1. Inline Reading View Preview
-In Reading View, your drawings render as crisp inline previews. Hover over any canvas to reveal interactive controls:
-- **Click to open drawing editor** — launches the full Excalidraw modal
-- **Zoom Controls (`+` / `−`)** — zoom in or out without opening the editor
-- **Corner Resize Handle** — drag to adjust the preview height
+### 1. Inline Previews in Reading View
+Your drawings render as crisp inline previews inside your notes. Click on any canvas to open the full editor modal instantly.
 
-![CanvasDraw inline preview in Obsidian note](./assets/inline-preview.png)
+![CanvasDraw inline drawing preview in Obsidian](./assets/inline-preview1.png)
 
 ---
 
 ### 2. Full-Featured Drawing Editor
-Open any canvas into the complete Excalidraw workspace. Use shapes, arrows, custom colors, roughness settings, and handwriting fonts.
+Open any canvas into the complete Excalidraw workspace — shapes, arrows, colors, roughness settings, and handwriting fonts, all in a clean full-screen modal.
 
-![CanvasDraw full-screen editor modal](./assets/modal-editor.png)
+![CanvasDraw full-screen editor modal](./assets/modal-editor2.png)
 
 ---
 
 ### 3. Library Panel & Element Browser
-Click the **Library** button in the editor to open the side panel. Browse and drag pre-built elements directly onto your canvas, or click **Browse libraries** to discover more from the Excalidraw community.
+Click **Library** in the editor toolbar to open the side panel. Browse pre-built shape libraries or click **Browse libraries** to discover more.
 
-![CanvasDraw editor with library panel open](./assets/library-panel.png)
+![CanvasDraw editor with library panel open](./assets/modal-editor.png)
 
 ---
 
-### 4. Command Palette Quick Actions
+### 4. Static Image Previews (BFS / Complex Diagrams)
+Complex diagrams like BFS trees render as crisp static image previews in your notes, keeping reading view fast and lightweight.
+
+![CanvasDraw static BFS diagram preview](./assets/inline-preview2.png)
+
+---
+
+### 5. Command Palette Quick Actions
 Access all drawing actions instantly via `Ctrl+P` / `Cmd+P`:
 
 ![CanvasDraw Command Palette](./assets/command-palette.png)
@@ -74,15 +78,15 @@ Access all drawing actions instantly via `Ctrl+P` / `Cmd+P`:
 
 ---
 
-### 5. Customization & Library Settings
+### 6. Customization & Library Settings
 Configure your drawing preferences in **Settings → Community plugins → CanvasDraw**:
 
-![CanvasDraw Plugin Settings](./assets/plugin-settings.png)
+![CanvasDraw Plugin Settings](./assets/settings.png)
 
-- **Installed Libraries**: View active `.excalidrawlib` packages, import new library files, or delete unwanted ones.
 - **Transparent Background**: Toggle transparent background mode for seamless note blending.
 - **Render Thumbnail in Canvas**: Switch between static image previews and live interactive canvas containers.
 - **Default Canvas Height**: Set the default initial height (px) for newly created drawing blocks.
+- **Installed Libraries**: View active `.excalidrawlib` files, import new ones, or delete unwanted ones.
 
 ---
 
@@ -99,7 +103,7 @@ Configure your drawing preferences in **Settings → Community plugins → Canva
    }
    ```
    ````
-3. Click the canvas thumbnail to open the Excalidraw editor and start sketching!
+3. Click the canvas thumbnail to open the Excalidraw editor and start drawing!
 4. Close the modal when finished — your changes save automatically back to the note.
 
 ---
@@ -109,7 +113,7 @@ Configure your drawing preferences in **Settings → Community plugins → Canva
 1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/Raushan-kumar-yadav/obsidianDraw/releases/latest).
 2. In your Obsidian vault, navigate to `.obsidian/plugins/` and create a folder named `canvas-draw`.
 3. Copy the three files into `.obsidian/plugins/canvas-draw/`.
-4. Open **Settings → Community plugins** in Obsidian, click Refresh, and enable **CanvasDraw**.
+4. Open **Settings → Community plugins**, click Refresh, and enable **CanvasDraw**.
 
 ---
 
