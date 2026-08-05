@@ -3,20 +3,32 @@ import { createRoot, Root } from 'react-dom/client';
 import { ExcalidrawPreview } from '../components/ExcalidrawPreview';
 import { ExcalidrawModal } from '../obsidian/ExcalidrawModal';
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
+import type { BinaryFiles } from '@excalidraw/excalidraw/dist/types/excalidraw/types';
 import type ObsidianDrawPlugin from '../main';
+
+function extractFileIds(source: string): string[] {
+	try {
+		const parsed = JSON.parse(source) as { elements?: any[]; files?: Record<string, any> };
+		const ids: string[] = [];
+		for (const el of parsed.elements ?? []) {
+			if (el.type === 'image' && el.fileId) ids.push(el.fileId);
+		}
+		for (const id of Object.keys(parsed.files ?? {})) {
+			if (!ids.includes(id)) ids.push(id);
+		}
+		return ids;
+	} catch {
+		return [];
+	}
+}
 
 export class ExcalidrawLiveWidget extends WidgetType {
 	private reactRoot: Root | null = null;
 	private elements: readonly ExcalidrawElement[] = [];
 	private appState: any = {};
 	private initialData: object | null = null;
+	private previewFiles: BinaryFiles = {};
 
-	/**
-	 * @param source         
-	 * @param plugin           
-	 * @param openingFenceLine 
-	 * @param blockIndex     
-	 */
 	constructor(
 		private readonly source: string,
 		private readonly plugin: ObsidianDrawPlugin,
@@ -24,6 +36,8 @@ export class ExcalidrawLiveWidget extends WidgetType {
 	) {
 		super();
 		this.parseSource(source);
+		// Pre-load images asynchronously
+		this.loadFiles();
 	}
 
 	eq(other: ExcalidrawLiveWidget): boolean {
@@ -40,6 +54,15 @@ export class ExcalidrawLiveWidget extends WidgetType {
 	destroy(_dom: HTMLElement): void {
 		this.reactRoot?.unmount();
 		this.reactRoot = null;
+	}
+
+	private async loadFiles(): Promise<void> {
+		const fileIds = extractFileIds(this.source);
+		if (fileIds.length > 0) {
+			this.previewFiles = await this.plugin.loadContentFiles(fileIds);
+			// Re-render once files are loaded
+			this.renderPreview();
+		}
 	}
 
 	private parseSource(source: string): void {
@@ -60,6 +83,7 @@ export class ExcalidrawLiveWidget extends WidgetType {
 			<ExcalidrawPreview
 				elements={this.elements}
 				appState={this.appState}
+				files={this.previewFiles}
 				onEdit={this.openModal}
 			/>,
 		);
@@ -75,4 +99,3 @@ export class ExcalidrawLiveWidget extends WidgetType {
 		).open();
 	};
 }
-

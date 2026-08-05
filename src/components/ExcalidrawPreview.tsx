@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react';
 import { exportToCanvas } from '@excalidraw/excalidraw';
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
-import type { AppState } from '@excalidraw/excalidraw/dist/types/excalidraw/types';
+import type { AppState, BinaryFiles } from '@excalidraw/excalidraw/dist/types/excalidraw/types';
 
 interface ExcalidrawPreviewProps {
- 	elements: readonly ExcalidrawElement[];
- 	appState?: Partial<AppState>;
- 	onEdit: () => void;
+	elements: readonly ExcalidrawElement[];
+	appState?: Partial<AppState>;
+ 	files?: BinaryFiles;
+	onEdit: () => void;
 }
 
- 
-export function ExcalidrawPreview({ elements, appState, onEdit }: ExcalidrawPreviewProps) {
+export function ExcalidrawPreview({ elements, appState, files, onEdit }: ExcalidrawPreviewProps) {
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
-		// Filter out deleted elements before rendering
 		const active = (elements ?? []).filter((el) => !el.isDeleted);
 		if (active.length === 0) {
 			setPreviewUrl(null);
@@ -23,8 +22,6 @@ export function ExcalidrawPreview({ elements, appState, onEdit }: ExcalidrawPrev
 		}
 
 		setLoading(true);
-
-		// Match Obsidian's current theme for the thumbnail
 		const isDark = document.body.classList.contains('theme-dark');
 
 		exportToCanvas({
@@ -34,7 +31,7 @@ export function ExcalidrawPreview({ elements, appState, onEdit }: ExcalidrawPrev
 				exportBackground: true,
 				viewBackgroundColor: appState?.viewBackgroundColor,
 			},
-			files: null,
+ 			files: files ?? null,
 			maxWidthOrHeight: 600,
 			exportPadding: 16,
 		})
@@ -46,8 +43,7 @@ export function ExcalidrawPreview({ elements, appState, onEdit }: ExcalidrawPrev
 				setPreviewUrl(null);
 			})
 			.finally(() => setLoading(false));
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [elements, appState]);
+ 	}, [elements, appState, files]);
 
 	return (
 		<div
@@ -74,14 +70,13 @@ export function ExcalidrawPreview({ elements, appState, onEdit }: ExcalidrawPrev
 
 			{!loading && previewUrl && (
 				<>
-
 					<img
 						src={previewUrl}
 						alt="Drawing preview"
 						className="obsidian-draw__preview-img"
 					/>
 					<div className="obsidian-draw__preview-hover-hint">✏️ Edit</div>
- 					<div style={{ position: 'absolute', inset: 0, zIndex: 3 }} />
+					<div style={{ position: 'absolute', inset: 0, zIndex: 3 }} />
 				</>
 			)}
 
