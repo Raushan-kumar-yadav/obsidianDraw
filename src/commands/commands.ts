@@ -39,10 +39,10 @@ const EMPTY_CANVAS = JSON.stringify(
 }
 
 export function registerCommands(plugin: ObsidianDrawPlugin) {
-	//  Add canvas at cursor  
+	// Add canvas at cursor
 	plugin.addCommand({
 		id: 'add-canvas',
-		name: 'ObsidianDraw: Add canvas at cursor',
+		name: 'Add canvas at cursor',
 		editorCallback: (editor: Editor) => {
 			const block = '```excalidraw\n' + EMPTY_CANVAS + '\n```';
 			const cursor = editor.getCursor();
@@ -56,10 +56,10 @@ export function registerCommands(plugin: ObsidianDrawPlugin) {
 		},
 	});
 
-	//  Open in editor  
+	// Open in editor
 	plugin.addCommand({
 		id: 'open-canvas-editor',
-		name: 'ObsidianDraw: Open canvas under cursor in editor',
+		name: 'Open canvas under cursor in editor',
 		editorCallback: (editor: Editor, ctx: MarkdownView | MarkdownFileInfo) => {
 			const lines = editor.getValue().split('\n');
 			const block = findExcalidrawBlock(lines, editor.getCursor().line);
@@ -81,9 +81,9 @@ export function registerCommands(plugin: ObsidianDrawPlugin) {
 		},
 	});
 
- 	plugin.addCommand({
+	plugin.addCommand({
 		id: 'clear-canvas',
-		name: 'ObsidianDraw: Clear canvas under cursor',
+		name: 'Clear canvas under cursor',
 		editorCallback: (editor: Editor) => {
 			const lines = editor.getValue().split('\n');
 			const block = findExcalidrawBlock(lines, editor.getCursor().line);
@@ -102,10 +102,10 @@ export function registerCommands(plugin: ObsidianDrawPlugin) {
 		},
 	});
 
-	// Delete canvas block under cursor  
+	// Delete canvas block under cursor
 	plugin.addCommand({
 		id: 'delete-canvas',
-		name: 'ObsidianDraw: Delete canvas block under cursor',
+		name: 'Delete canvas block under cursor',
 		editorCallback: (editor: Editor) => {
 			const lines = editor.getValue().split('\n');
 			const block = findExcalidrawBlock(lines, editor.getCursor().line);
@@ -124,10 +124,10 @@ export function registerCommands(plugin: ObsidianDrawPlugin) {
 		},
 	});
 
-	//  New note with canvas  
+	// New note with canvas
 	plugin.addCommand({
 		id: 'new-note-with-canvas',
-		name: 'ObsidianDraw: Create new note with canvas',
+		name: 'Create new note with canvas',
 		callback: async () => {
 			const date = new Date();
 			const name = [

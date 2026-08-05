@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "obsidianDraw",
+	"name": "ObsidianDraw",
 	"version": "1.0.0",
 	"minAppVersion": "1.0.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Seamless inline Excalidraw integration for Obsidian with full drawing tools, library management, and custom canvas controls.",
+	"author": "Raushan Kumar Yadav",
+	"authorUrl": "https://github.com/Raushan-kumar-yadav",
+	"fundingUrl": "https://github.com/sponsors/Raushan-kumar-yadav",
 	"isDesktopOnly": false
 }

@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-draw",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "ObsidianDraw - Seamless Excalidraw integration for Obsidian",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
