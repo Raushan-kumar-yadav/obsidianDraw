@@ -32,6 +32,7 @@ export function buildLivePreviewPlugin(plugin: ObsidianDrawPlugin) {
 function buildDecorations(doc: Text, plugin: ObsidianDrawPlugin): DecorationSet {
 	const ranges: Range<Decoration>[] = [];
 	let lineNum = 1;
+	let blockIndex = 0; // tracks excalidraw block  
 
 	while (lineNum <= doc.lines) {
 		const line = doc.line(lineNum);
@@ -62,11 +63,12 @@ function buildDecorations(doc: Text, plugin: ObsidianDrawPlugin): DecorationSet 
 
 				ranges.push(
 					Decoration.replace({
-						widget: new ExcalidrawLiveWidget(source, plugin),
+						widget: new ExcalidrawLiveWidget(source, plugin, blockIndex),
 						block: true,
 					}).range(line.from, closingLine.to),
 				);
 
+				blockIndex++;
 				lineNum = closingLineNum + 1;
 				continue;
 			}

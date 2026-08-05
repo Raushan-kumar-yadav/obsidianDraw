@@ -5,23 +5,29 @@ import { ExcalidrawModal } from '../obsidian/ExcalidrawModal';
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
 import type ObsidianDrawPlugin from '../main';
 
- 
 export class ExcalidrawLiveWidget extends WidgetType {
 	private reactRoot: Root | null = null;
 	private elements: readonly ExcalidrawElement[] = [];
 	private appState: any = {};
 	private initialData: object | null = null;
 
+	/**
+	 * @param source         
+	 * @param plugin           
+	 * @param openingFenceLine 
+	 * @param blockIndex     
+	 */
 	constructor(
 		private readonly source: string,
 		private readonly plugin: ObsidianDrawPlugin,
+		private readonly blockIndex: number = 0,
 	) {
 		super();
 		this.parseSource(source);
 	}
 
- 	eq(_other: ExcalidrawLiveWidget): boolean {
-		return true;
+	eq(other: ExcalidrawLiveWidget): boolean {
+		return this.blockIndex === other.blockIndex && this.source === other.source;
 	}
 
 	toDOM(_view: EditorView): HTMLElement {
@@ -35,8 +41,6 @@ export class ExcalidrawLiveWidget extends WidgetType {
 		this.reactRoot?.unmount();
 		this.reactRoot = null;
 	}
-
-	// private  
 
 	private parseSource(source: string): void {
 		if (!source.trim()) return;
@@ -62,12 +66,13 @@ export class ExcalidrawLiveWidget extends WidgetType {
 	}
 
 	private openModal = (): void => {
-	 
 		new ExcalidrawModal(
 			this.plugin.app,
 			this.plugin,
 			this.initialData,
 			this.source.trim(),
+			this.blockIndex,
 		).open();
 	};
 }
+

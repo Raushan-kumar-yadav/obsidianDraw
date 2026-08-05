@@ -51,10 +51,7 @@ export function ExcalidrawWrapper({
 			appState: AppState,
 			files: BinaryFiles,
 		) => {
-			if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-			saveTimeoutRef.current = setTimeout(() => {
-				onSave(elements, appState, files);
-			}, 1000);
+			onSave(elements, appState, files);
 		},
 		[onSave],
 	);

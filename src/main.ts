@@ -1,9 +1,10 @@
 import { Plugin } from 'obsidian';
 import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from './commands/settings';
+import { registerCommands } from './commands/commands';
 import { ExcalidrawRenderChild } from './obsidian/ExcalidrawRenderChild';
 import { buildLivePreviewPlugin } from './editor/LivePreviewPlugin';
 
-// esbuild loads this as a raw text string (loader: { '.css': 'text' })
+ 
 import excalidrawCss from '../node_modules/@excalidraw/excalidraw/dist/prod/index.css';
 
 export default class ObsidianDrawPlugin extends Plugin {
@@ -14,16 +15,16 @@ export default class ObsidianDrawPlugin extends Plugin {
 		await this.loadSettings();
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
-		// Inject Excalidraw's stylesheet so its layout renders correctly
+		// Excalidraw  stylesheet 
 		this.excalidrawStyleEl = document.createElement('style');
 		this.excalidrawStyleEl.id = 'obsidian-draw__excalidraw-styles';
 		this.excalidrawStyleEl.textContent = excalidrawCss;
 		document.head.appendChild(this.excalidrawStyleEl);
 
-		// CM6 ViewPlugin — handles Live Preview (writing mode)
+		// CM6 ViewPlugin 
 		this.registerEditorExtension(buildLivePreviewPlugin(this));
 
-		// Code block processor — handles Reading View
+		// Code block processor  
 		this.registerMarkdownCodeBlockProcessor(
 			'excalidraw',
 			(source, el, ctx) => {
@@ -31,6 +32,9 @@ export default class ObsidianDrawPlugin extends Plugin {
 				ctx.addChild(child);
 			},
 		);
+
+		// Register command  
+		registerCommands(this);
 	}
 
 	onunload() {
