@@ -1,9 +1,9 @@
 {
 	"id": "canvas-draw",
-	"name": "ObsidianDraw",
+	"name": "CanvasDraw",
 	"version": "1.0.0",
 	"minAppVersion": "1.0.0",
-	"description": "Seamless inline Excalidraw integration for Obsidian with full drawing tools, library management, and custom canvas controls.",
+	"description": "Seamless inline Excalidraw integration with full drawing tools, library management, and custom canvas controls.",
 	"author": "Raushan Kumar Yadav",
 	"authorUrl": "https://github.com/Raushan-kumar-yadav",
 	"fundingUrl": "https://github.com/sponsors/Raushan-kumar-yadav",
