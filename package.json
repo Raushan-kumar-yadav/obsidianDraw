@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-draw",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "ObsidianDraw - Seamless Excalidraw integration for Obsidian",
 	"main": "main.js",
 	"type": "module",
