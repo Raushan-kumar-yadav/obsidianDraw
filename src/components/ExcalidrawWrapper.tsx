@@ -59,7 +59,7 @@ export function ExcalidrawWrapper({
 			<Excalidraw
 				initialData={data}
 				onChange={handleChange}
-				excalidrawAPI={onExcalidrawAPI}
+				excalidrawAPI={onExcalidrawAPI ? (api) => { void onExcalidrawAPI(api); } : undefined}
 				theme={theme as 'light' | 'dark'}
 				UIOptions={
 					transparentBackground

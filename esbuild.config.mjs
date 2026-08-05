@@ -17,10 +17,15 @@ const excalidrawCssPath = path.resolve('node_modules/@excalidraw/excalidraw/dist
 const pluginCssPath     = path.resolve('src/plugin.css');
 const outputCssPath     = path.resolve('styles.css');
 
- function buildStyles() {
+function buildStyles() {
 	const excalidrawCss = fs.readFileSync(excalidrawCssPath, 'utf8');
 	const pluginCss     = fs.readFileSync(pluginCssPath, 'utf8');
-	fs.writeFileSync(outputCssPath, excalidrawCss + '\n\n' + pluginCss, 'utf8');
+	const combined =
+		'/* stylelint-disable */\n' +
+		excalidrawCss +
+		'\n/* stylelint-enable */\n\n' +
+		pluginCss;
+	fs.writeFileSync(outputCssPath, combined, 'utf8');
 	console.log('[styles] styles.css rebuilt');
 }
 

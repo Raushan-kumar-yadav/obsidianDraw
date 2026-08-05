@@ -83,7 +83,7 @@ export class ExcalidrawModal extends Modal {
 						this.excalidrawApi = api;
 						const items = await this.plugin.loadLibraryItems();
 						if (items.length > 0) {
-							api.updateLibrary({ libraryItems: items as unknown as Parameters<typeof api.updateLibrary>[0]['libraryItems'], merge: true });
+							void api.updateLibrary({ libraryItems: items as unknown as Parameters<typeof api.updateLibrary>[0]['libraryItems'], merge: true });
 						}
 					})();
 				}}
