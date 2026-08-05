@@ -65,6 +65,12 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 	private initialData: object | null = null;
 	private blockIndex = 0;
  	private previewFiles: BinaryFiles = {};
+ 	private previewHeight = 300;
+ 	private previewZoom = 1;
+
+	private get heightKey(): string {
+		return `${this.ctx.sourcePath}:${this.blockIndex}`;
+	}
 
 	constructor(
 		containerEl: HTMLElement,
@@ -82,6 +88,10 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 			this.blockIndex = computeBlockIndex(info.text, info.lineStart);
 		}
 
+		// Load persisted height  
+		const savedSettingsHeight = this.plugin.settings.previewHeights?.[this.heightKey];
+		this.previewHeight = savedSettingsHeight ?? this.plugin.settings.defaultCanvasHeight ?? 300;
+ 
 		this.containerEl.empty();
 		const mountEl = this.containerEl.createDiv();
 		this.reactRoot = createRoot(mountEl);
@@ -89,7 +99,7 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 		// Load image files  
 		this.loadFilesAndRender();
 
-		// Re-render thumbnail  
+		// Re-render thumbnail
 		this.registerEvent(
 			this.plugin.app.vault.on('modify', (abstractFile: TAbstractFile) => {
 				if (!(abstractFile instanceof TFile)) return;
@@ -102,7 +112,7 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 					this.source = newSource;
 					this.parseSource(newSource);
 
-					// Reload files if the source changed  
+					// Reload files if the source changed
 					if (changed) {
 						await this.loadFilesAndRender();
 					} else {
@@ -111,7 +121,15 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 				});
 			}),
 		);
+ 
+		this.registerEvent(
+			(this.plugin.app.workspace as any).on(
+				'obsidian-draw:preview-mode-changed',
+				() => { this.renderPreview(); },
+			),
+		);
 	}
+
 
 	onunload(): void {
 		this.reactRoot?.unmount();
@@ -131,10 +149,17 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 	private parseSource(source: string): void {
 		if (!source.trim()) return;
 		try {
-			const parsed = JSON.parse(source) as { elements?: ExcalidrawElement[], appState?: Partial<AppState> };
+			const parsed = JSON.parse(source) as {
+				elements?: ExcalidrawElement[];
+				appState?: Partial<AppState>;
+				previewHeight?: number;
+				previewZoom?: number;
+			};
 			this.initialData = parsed;
-			this.elements = parsed.elements ?? [];
-			this.appState = parsed.appState ?? {};
+			this.elements  = parsed.elements  ?? [];
+			this.appState  = parsed.appState  ?? {};
+ 			if (typeof parsed.previewHeight === 'number') this.previewHeight = parsed.previewHeight;
+			if (typeof parsed.previewZoom   === 'number') this.previewZoom   = parsed.previewZoom;
 		} catch (e) {
 			console.error('[ObsidianDraw] RenderChild: failed to parse JSON:', e);
 		}
@@ -148,9 +173,59 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 				appState={this.appState}
 				files={this.previewFiles}
 				onEdit={this.openModal}
+				renderInCanvas={this.plugin.settings.renderThumbnailInCanvas}
+				initialHeight={this.previewHeight}
+				onHeightChange={this.savePreviewHeight}
+				initialZoom={this.previewZoom}
+				onZoomChange={this.savePreviewZoom}
 			/>,
 		);
 	}
+
+ 	private savePreviewState = async (updates: { previewHeight?: number; previewZoom?: number }): Promise<void> => {
+		const file = this.plugin.app.vault.getFileByPath(this.ctx.sourcePath);
+		if (!file) return;
+
+		if (updates.previewHeight !== undefined) this.previewHeight = updates.previewHeight;
+		if (updates.previewZoom   !== undefined) this.previewZoom   = updates.previewZoom;
+
+		await this.plugin.app.vault.process(file, (content) => {
+			const openFence = '```excalidraw\n';
+			let searchPos = 0;
+			let foundCount = 0;
+
+			while (searchPos < content.length) {
+				const fencePos = content.indexOf(openFence, searchPos);
+				if (fencePos === -1) break;
+
+				const contentStart = fencePos + openFence.length;
+				const closeFenceIdx = content.indexOf('\n```', contentStart);
+				if (closeFenceIdx === -1) break;
+
+				if (foundCount === this.blockIndex) {
+					try {
+						const parsed = JSON.parse(content.slice(contentStart, closeFenceIdx)) as Record<string, unknown>;
+						if (updates.previewHeight !== undefined) parsed.previewHeight = updates.previewHeight;
+						if (updates.previewZoom   !== undefined) parsed.previewZoom   = updates.previewZoom;
+						return (
+							content.slice(0, contentStart) +
+							JSON.stringify(parsed, null, 2) +
+							content.slice(closeFenceIdx)
+						);
+					} catch {
+						return content;
+					}
+				}
+
+				foundCount++;
+				searchPos = closeFenceIdx + '\n```'.length;
+			}
+			return content;
+		});
+	};
+
+	private savePreviewHeight = (height: number) => this.savePreviewState({ previewHeight: height });
+	private savePreviewZoom   = (zoom: number)   => this.savePreviewState({ previewZoom: zoom });
 
 	private openModal = (): void => {
 		// Re-derive block index  

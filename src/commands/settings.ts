@@ -3,10 +3,16 @@ import MyPlugin from '../main';
 
 export interface MyPluginSettings {
 	transparentBackground: boolean;
+ 	previewHeights: Record<string, number>;
+ 	renderThumbnailInCanvas: boolean;
+ 	defaultCanvasHeight: number;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
 	transparentBackground: true,
+	previewHeights: {},
+	renderThumbnailInCanvas: false,
+	defaultCanvasHeight: 300,
 };
 
 export class SampleSettingTab extends PluginSettingTab {
@@ -23,8 +29,7 @@ export class SampleSettingTab extends PluginSettingTab {
 		containerEl.empty();
 		containerEl.addClass('obsidian-draw-settings-tab');
 
-		// Render the mini list and Import button
-		await this.renderLibraryList(containerEl);
+ 		await this.renderLibraryList(containerEl);
 
 		new Setting(containerEl)
 			.setName('Transparent background')
@@ -35,6 +40,35 @@ export class SampleSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.transparentBackground = value;
 						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName('Render thumbnail in canvas')
+			.setDesc('When on, previews use a live interactive Excalidraw canvas (zoom/pan enabled). When off, a static image is used (default, lighter).')
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.renderThumbnailInCanvas)
+					.onChange(async (value) => {
+						this.plugin.settings.renderThumbnailInCanvas = value;
+						await this.plugin.saveSettings();
+ 						(this.app.workspace as any).trigger('obsidian-draw:preview-mode-changed');
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName('Default canvas height (px)')
+			.setDesc('Default preview height for new canvas blocks. Existing blocks with a saved height are unaffected.')
+			.addText((text) =>
+				text
+					.setPlaceholder('300')
+					.setValue(String(this.plugin.settings.defaultCanvasHeight))
+					.onChange(async (value) => {
+						const num = parseInt(value, 10);
+						if (!isNaN(num) && num >= 80) {
+							this.plugin.settings.defaultCanvasHeight = num;
+							await this.plugin.saveSettings();
+						}
 					}),
 			);
 	}

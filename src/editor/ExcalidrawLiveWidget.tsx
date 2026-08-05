@@ -85,6 +85,7 @@ export class ExcalidrawLiveWidget extends WidgetType {
 				appState={this.appState}
 				files={this.previewFiles}
 				onEdit={this.openModal}
+				renderInCanvas={this.plugin.settings.renderThumbnailInCanvas}
 			/>,
 		);
 	}

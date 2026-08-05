@@ -81,8 +81,7 @@ export function registerCommands(plugin: ObsidianDrawPlugin) {
 		},
 	});
 
-	// ─── 3. Clear canvas under cursor ──────────────────────────────────────────
-	plugin.addCommand({
+ 	plugin.addCommand({
 		id: 'clear-canvas',
 		name: 'ObsidianDraw: Clear canvas under cursor',
 		editorCallback: (editor: Editor) => {
@@ -103,7 +102,7 @@ export function registerCommands(plugin: ObsidianDrawPlugin) {
 		},
 	});
 
-	// ─── 4. Delete canvas block under cursor ───────────────────────────────────
+	// Delete canvas block under cursor  
 	plugin.addCommand({
 		id: 'delete-canvas',
 		name: 'ObsidianDraw: Delete canvas block under cursor',
@@ -125,7 +124,7 @@ export function registerCommands(plugin: ObsidianDrawPlugin) {
 		},
 	});
 
-	// ─── 5. New note with canvas ────────────────────────────────────────────────
+	//  New note with canvas  
 	plugin.addCommand({
 		id: 'new-note-with-canvas',
 		name: 'ObsidianDraw: Create new note with canvas',

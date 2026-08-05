@@ -28,8 +28,7 @@ export class ExcalidrawModal extends Modal {
 		private readonly initialData: object | null,
 		initialJson: string,
 		private readonly blockIndex: number = 0,
-		/** Called synchronously at the very end of onClose, before focus/scroll changes settle. */
-		private readonly onAfterClose?: () => void,
+ 		private readonly onAfterClose?: () => void,
 	) {
 		super(app);
 		this.lastSavedJson = initialJson;
@@ -164,17 +163,8 @@ export class ExcalidrawModal extends Modal {
 			}
 		}
 
-		const newJson = JSON.stringify(
-			{ elements, appState: savedAppState, files: filesIndex },
-			null,
-			2,
-		);
-		if (newJson === this.lastSavedJson) return;
-
 		const targetFile = this.file;
 		if (!targetFile) return;
-
-		this.lastSavedJson = newJson;
 
  		if (Object.keys(files).length > 0) {
 			this.plugin.saveContentFiles(files).catch((e) =>
@@ -185,7 +175,7 @@ export class ExcalidrawModal extends Modal {
  		this.plugin.app.vault.process(targetFile, (content: string) => {
 			const openFence = '```excalidraw\n';
 
- 			let searchPos = 0;
+			let searchPos = 0;
 			let foundCount = 0;
 			let fencePos = -1;
 
@@ -206,9 +196,21 @@ export class ExcalidrawModal extends Modal {
 			const closeFenceIdx = content.indexOf('\n```', contentStart);
 			if (closeFenceIdx === -1) return content;
 
+		 
+			let previewExtras: Record<string, unknown> = {};
+			try {
+				const existing = JSON.parse(content.slice(contentStart, closeFenceIdx)) as Record<string, unknown>;
+				if (existing.previewHeight !== undefined) previewExtras.previewHeight = existing.previewHeight;
+				if (existing.previewZoom   !== undefined) previewExtras.previewZoom   = existing.previewZoom;
+			} catch { }
+
+			const payload = { elements, appState: savedAppState, files: filesIndex, ...previewExtras };
+			const finalJson = JSON.stringify(payload, null, 2);
+			this.lastSavedJson = finalJson;
+
 			return (
 				content.slice(0, contentStart) +
-				newJson +
+				finalJson +
 				content.slice(closeFenceIdx)
 			);
 		});
