@@ -78,12 +78,14 @@ export class ExcalidrawModal extends Modal {
 			<ExcalidrawWrapper
 				initialData={initialDataWithFiles}
 				onSave={this.handleSave}
-				onExcalidrawAPI={async (api) => {
-					this.excalidrawApi = api;
-					const items = await this.plugin.loadLibraryItems();
-					if (items.length > 0) {
-						api.updateLibrary({ libraryItems: items as unknown as Parameters<typeof api.updateLibrary>[0]['libraryItems'], merge: true });
-					}
+				onExcalidrawAPI={(api) => {
+					void (async () => {
+						this.excalidrawApi = api;
+						const items = await this.plugin.loadLibraryItems();
+						if (items.length > 0) {
+							api.updateLibrary({ libraryItems: items as unknown as Parameters<typeof api.updateLibrary>[0]['libraryItems'], merge: true });
+						}
+					})();
 				}}
 				theme={theme}
 				transparentBackground={this.plugin.settings.transparentBackground}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { exportToCanvas } from '@excalidraw/excalidraw';
+import { exportToCanvas as excalidrawExportToCanvas } from '@excalidraw/excalidraw';
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
 import type { AppState, BinaryFiles } from '@excalidraw/excalidraw/dist/types/excalidraw/types';
 
@@ -73,7 +73,17 @@ export function ExcalidrawPreview({
 		let cancelled = false;
 		const isDark = document.body.classList.contains('theme-dark');
 
-		(exportToCanvas({
+		const exportFn = excalidrawExportToCanvas as (
+			opts: {
+				elements: ExcalidrawElement[];
+				appState: Record<string, unknown>;
+				files: BinaryFiles | null;
+				maxWidthOrHeight?: number;
+				exportPadding?: number;
+			}
+		) => Promise<HTMLCanvasElement>;
+
+		void exportFn({
 			elements: active,
 			appState: {
 				exportWithDarkMode: isDark,
@@ -83,7 +93,7 @@ export function ExcalidrawPreview({
 			files: files ?? null,
 			maxWidthOrHeight: renderInCanvas ? 1200 : 600,
 			exportPadding: 16,
-		}) as Promise<HTMLCanvasElement>)
+		})
 			.then((canvas) => {
 				if (!cancelled) setPreviewUrl(canvas.toDataURL('image/png'));
 			})

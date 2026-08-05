@@ -19,7 +19,7 @@ export interface ExcalidrawWrapperProps {
 		files: BinaryFiles,
 	) => void;
  
-	onExcalidrawAPI?: (api: ExcalidrawImperativeAPI) => void;
+	onExcalidrawAPI?: (api: ExcalidrawImperativeAPI) => void | Promise<void>;
 	 
 	theme?: string;
 	transparentBackground?: boolean;

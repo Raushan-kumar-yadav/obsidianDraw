@@ -23,6 +23,7 @@ export class ObsidianDrawSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	/** Declarative settings API (Obsidian 1.13.0+). Enables settings search. */
 	getSettingDefinitions() {
 		return [
 			{
@@ -47,6 +48,11 @@ export class ObsidianDrawSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
+		this.render();
+	}
+
+	/** Internal render — called by display() and by library list refresh. */
+	private render(): void {
 		const { containerEl } = this;
 		containerEl.empty();
 		containerEl.addClass('obsidian-draw-settings-tab');
@@ -151,7 +157,7 @@ export class ObsidianDrawSettingTab extends PluginSettingTab {
 				}
 			}
 
-			this.display();
+			this.render();
 		};
 
 		if (filesInFolder.length > 0) {
@@ -168,7 +174,7 @@ export class ObsidianDrawSettingTab extends PluginSettingTab {
 				});
 				delBtn.onclick = async () => {
 					await adapter.remove(filePath);
-					this.display();
+					this.render();
 				};
 			});
 		} else {
