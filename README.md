@@ -33,6 +33,14 @@ Embed interactive drawings, system architecture diagrams, mind maps, and sketche
 
 ---
 
+<div align="center">
+
+[![Install in Obsidian](https://img.shields.io/badge/Install%20in%20Obsidian-7C3AED?style=for-the-badge&logo=obsidian&logoColor=white)](https://community.obsidian.md/plugins/canvas-draw)
+
+</div>
+
+---
+
 ## 📸 Feature Tour
 
 ### 1. Inline Previews in Reading View
