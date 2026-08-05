@@ -23,6 +23,29 @@ export class ObsidianDrawSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	getSettingDefinitions() {
+		return [
+			{
+				key: 'transparentBackground',
+				name: 'Transparent background',
+				desc: 'Force a transparent background and disable the canvas background color picker.',
+				type: 'toggle' as const,
+			},
+			{
+				key: 'renderThumbnailInCanvas',
+				name: 'Render thumbnail in canvas',
+				desc: 'When on, previews use a live interactive Excalidraw canvas. When off, a static image is used (default, lighter).',
+				type: 'toggle' as const,
+			},
+			{
+				key: 'defaultCanvasHeight',
+				name: 'Default canvas height (px)',
+				desc: 'Default preview height for new canvas blocks.',
+				type: 'text' as const,
+			},
+		];
+	}
+
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();

@@ -69,24 +69,21 @@ export class ExcalidrawModal extends Modal {
 		const isDark = document.body.classList.contains('theme-dark');
 		const theme = isDark ? 'dark' : 'light';
 
-		const initialDataWithFiles = {
+		const initialDataWithFiles: { elements?: ExcalidrawElement[]; appState?: { viewBackgroundColor?: string }; files: BinaryFiles } = {
 			...this.initialData,
-			files: {
-				...this.loadedFiles,
-			} as BinaryFiles,
+			files: { ...this.loadedFiles },
 		};
 
 		this.reactRoot.render(
 			<ExcalidrawWrapper
 				initialData={initialDataWithFiles}
 				onSave={this.handleSave}
-				onExcalidrawAPI={(api) => {
+				onExcalidrawAPI={async (api) => {
 					this.excalidrawApi = api;
-					void this.plugin.loadLibraryItems().then((items) => {
-						if (items.length > 0) {
-							api.updateLibrary({ libraryItems: items as unknown as Parameters<typeof api.updateLibrary>[0]['libraryItems'], merge: true });
-						}
-					});
+					const items = await this.plugin.loadLibraryItems();
+					if (items.length > 0) {
+						api.updateLibrary({ libraryItems: items as unknown as Parameters<typeof api.updateLibrary>[0]['libraryItems'], merge: true });
+					}
 				}}
 				theme={theme}
 				transparentBackground={this.plugin.settings.transparentBackground}
@@ -113,8 +110,8 @@ export class ExcalidrawModal extends Modal {
 			if (this.saveTimeout) {
 				window.clearTimeout(this.saveTimeout);
 			}
-			const allFiles = { ...this.latestFiles, ...files };
-			this.performSave(elements, appState as unknown as AppState, allFiles);
+			const allFiles: BinaryFiles = { ...this.latestFiles, ...files };
+			this.performSave(elements, appState, allFiles);
 		}
 		this.reactRoot?.unmount();
 		this.reactRoot = null;

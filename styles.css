@@ -27,13 +27,12 @@
 
  
 
- /* Outer — border invisible by default, revealed on hover */
-.obsidian-draw__preview-outer {
+ .obsidian-draw__preview-outer {
   position: relative;
   display: block;
   max-width: 100%;
   min-height: 80px;
-  border: 1px solid transparent;   /* keep layout stable; invisible at rest */
+  border: 1px solid transparent;    
   border-radius: 8px;
   background: var(--background-primary);
   transition: border-color 0.2s ease;
@@ -43,19 +42,17 @@
   border-color: var(--interactive-accent);
 }
 
-/* Scrollable area — overflow hidden + full height by default (no visible scrollbar) */
-.obsidian-draw__preview-scroll {
+ .obsidian-draw__preview-scroll {
   position: absolute;
   inset: 0;
-  bottom: 0;           /* full height at rest — resize handle is invisible */
-  overflow: hidden;    /* no scrollbar at rest */
+  bottom: 0;           
+  overflow: hidden;    
   cursor: pointer;
   border-radius: 8px;
   transition: bottom 0.2s ease;
 }
 
-/* On hover: shrink to leave room for resize handle, enable scroll */
-.obsidian-draw__preview-outer:hover .obsidian-draw__preview-scroll {
+ .obsidian-draw__preview-outer:hover .obsidian-draw__preview-scroll {
   bottom: 12px;
   overflow: auto;
   border-radius: 7px 7px 0 0;
@@ -73,8 +70,7 @@
   border-radius: 6px 6px 0 0;
 }
 
-/* Resize handle — invisible by default, shown on outer hover */
-.obsidian-draw__preview-resize-handle {
+ .obsidian-draw__preview-resize-handle {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -114,8 +110,7 @@
   pointer-events: none;
 }
 
-/* ── Zoom controls — bottom-left, above resize handle ───────────────────── */
-.obsidian-draw__preview-zoom-controls {
+ .obsidian-draw__preview-zoom-controls {
   position: absolute;
   bottom: 16px;
   left: 8px;
@@ -226,8 +221,7 @@
   overflow: hidden;
 }
 
-/* High-specificity selectors avoid needing !important */
-.modal.obsidian-draw__modal .obsidian-draw__modal-body .excalidraw {
+ .modal.obsidian-draw__modal .obsidian-draw__modal-body .excalidraw {
   width: 100%;
   height: 100%;
 }
@@ -237,15 +231,13 @@
   height: 100%;
 }
 
-/* Click-capture overlay so the edit button sits on top */
-.obsidian-draw__preview-overlay {
+ .obsidian-draw__preview-overlay {
   position: absolute;
   inset: 0;
   z-index: 3;
 }
 
-/* ── Settings: library list ──────────────────────────────────────────────── */
-.obsidian-draw-library-import-label {
+ .obsidian-draw-library-import-label {
   display: inline-block;
   cursor: pointer;
   background: var(--interactive-accent);

@@ -229,8 +229,8 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 		}
 	};
 
-	private savePreviewHeight = (height: number) => this.savePreviewState({ previewHeight: height });
-	private savePreviewZoom   = (zoom: number)   => this.savePreviewState({ previewZoom: zoom });
+	private savePreviewHeight = (height: number): void => { void this.savePreviewState({ previewHeight: height }); };
+	private savePreviewZoom   = (zoom: number): void   => { void this.savePreviewState({ previewZoom: zoom }); };
 
 	private openModal = (): void => {
 		const info = this.ctx.getSectionInfo(this.containerEl);

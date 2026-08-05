@@ -72,7 +72,9 @@ export function registerCommands(plugin: ObsidianDrawPlugin) {
 			const source = lines.slice(block.openLine + 1, block.closeLine).join('\n');
 			let initialData: object | null = null;
 			try {
-				initialData = source.trim() ? JSON.parse(source) : null;
+				initialData = source.trim()
+					? (JSON.parse(source) as import('../obsidian/ExcalidrawModal').ParsedCanvasData)
+					: null;
 			} catch {
 				new Notice('ObsidianDraw: Canvas JSON is invalid — opening blank canvas.');
 			}

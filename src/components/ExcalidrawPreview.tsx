@@ -73,7 +73,7 @@ export function ExcalidrawPreview({
 		let cancelled = false;
 		const isDark = document.body.classList.contains('theme-dark');
 
-		exportToCanvas({
+		(exportToCanvas({
 			elements: active,
 			appState: {
 				exportWithDarkMode: isDark,
@@ -83,8 +83,8 @@ export function ExcalidrawPreview({
 			files: files ?? null,
 			maxWidthOrHeight: renderInCanvas ? 1200 : 600,
 			exportPadding: 16,
-		})
-			.then((canvas: HTMLCanvasElement) => {
+		}) as Promise<HTMLCanvasElement>)
+			.then((canvas) => {
 				if (!cancelled) setPreviewUrl(canvas.toDataURL('image/png'));
 			})
 			.catch((err: unknown) => console.error('[ObsidianDraw] Preview render error:', err));
