@@ -28,6 +28,8 @@ export class ExcalidrawModal extends Modal {
 		private readonly initialData: object | null,
 		initialJson: string,
 		private readonly blockIndex: number = 0,
+		/** Called synchronously at the very end of onClose, before focus/scroll changes settle. */
+		private readonly onAfterClose?: () => void,
 	) {
 		super(app);
 		this.lastSavedJson = initialJson;
@@ -112,12 +114,14 @@ export class ExcalidrawModal extends Modal {
 			if (this.saveTimeout) {
 				window.clearTimeout(this.saveTimeout);
 			}
- 			const allFiles = { ...this.latestFiles, ...files };
+			const allFiles = { ...this.latestFiles, ...files };
 			this.performSave(elements, appState as unknown as AppState, allFiles);
 		}
 		this.reactRoot?.unmount();
 		this.reactRoot = null;
 		this.contentEl.empty();
+		// Notify caller so it can restore scroll position
+		this.onAfterClose?.();
 	}
 
 	private handleSave = (

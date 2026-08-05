@@ -153,10 +153,14 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 	}
 
 	private openModal = (): void => {
- 		const info = this.ctx.getSectionInfo(this.containerEl);
+		// Re-derive block index  
+		const info = this.ctx.getSectionInfo(this.containerEl);
 		if (info) {
 			this.blockIndex = computeBlockIndex(info.text, info.lineStart);
 		}
+
+ 		const scrollEl = this.findScrollContainer();
+		const savedScrollTop = scrollEl?.scrollTop ?? 0;
 
 		new ExcalidrawModal(
 			this.plugin.app,
@@ -164,6 +168,34 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 			this.initialData,
 			this.source.trim(),
 			this.blockIndex,
+			() => {
+				// Restore the exact scroll position after the modal closes.
+				// Use two rAF passes: first lets Obsidian re-render the view,
+				// second fires after that repaint settles.
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						if (scrollEl) {
+							scrollEl.scrollTop = savedScrollTop;
+						}
+					});
+				});
+			},
 		).open();
 	};
+
+	/** Walk up the DOM to find the first scrollable ancestor. */
+	private findScrollContainer(): HTMLElement | null {
+		let el: HTMLElement | null = this.containerEl.parentElement;
+		while (el) {
+			const { overflow, overflowY } = window.getComputedStyle(el);
+			if (
+				overflow === 'auto' || overflow === 'scroll' ||
+				overflowY === 'auto' || overflowY === 'scroll'
+			) {
+				return el;
+			}
+			el = el.parentElement;
+		}
+		return null;
+	}
 }
