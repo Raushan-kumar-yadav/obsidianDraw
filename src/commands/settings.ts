@@ -22,13 +22,6 @@ export class ObsidianDrawSettingTab extends PluginSettingTab {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
- 	getSettingDefinitions() {
-		return [
-			{ key: 'transparentBackground',   name: 'Transparent background',      desc: 'Force a transparent background.',                    type: 'toggle' as const },
-			{ key: 'renderThumbnailInCanvas',  name: 'Render thumbnail in canvas',  desc: 'Use a live canvas or static image for previews.',    type: 'toggle' as const },
-			{ key: 'defaultCanvasHeight',      name: 'Default canvas height (px)',  desc: 'Default preview height for new canvas blocks.',      type: 'text'   as const },
-		];
-	}
 
 	display(): void {
 		this.render();
