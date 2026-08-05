@@ -3,28 +3,49 @@ import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from './commands
 import { registerCommands } from './commands/commands';
 import { ExcalidrawRenderChild } from './obsidian/ExcalidrawRenderChild';
 import { buildLivePreviewPlugin } from './editor/LivePreviewPlugin';
+import type { BinaryFiles } from '@excalidraw/excalidraw/dist/types/excalidraw/types';
 
- 
 import excalidrawCss from '../node_modules/@excalidraw/excalidraw/dist/prod/index.css';
+
+/** Extension for each MIME type we support storing. */
+const MIME_TO_EXT: Record<string, string> = {
+	'image/png': 'png',
+	'image/jpeg': 'jpg',
+	'image/jpg': 'jpg',
+	'image/gif': 'gif',
+	'image/webp': 'webp',
+	'image/svg+xml': 'svg',
+	'image/bmp': 'bmp',
+};
 
 export default class ObsidianDrawPlugin extends Plugin {
 	settings!: MyPluginSettings;
 	private excalidrawStyleEl: HTMLStyleElement | null = null;
 
+	get contentDir(): string {
+		return `${this.manifest.dir}/content`;
+	}
+
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
-		// Excalidraw  stylesheet 
+		// Excalidraw  stylesheet
 		this.excalidrawStyleEl = document.createElement('style');
 		this.excalidrawStyleEl.id = 'obsidian-draw__excalidraw-styles';
 		this.excalidrawStyleEl.textContent = excalidrawCss;
 		document.head.appendChild(this.excalidrawStyleEl);
 
-		// CM6 ViewPlugin 
+		// Ensure content folder exists
+		const adapter = this.app.vault.adapter;
+		if (!(await adapter.exists(this.contentDir))) {
+			await adapter.mkdir(this.contentDir);
+		}
+
+		// CM6 ViewPlugin
 		this.registerEditorExtension(buildLivePreviewPlugin(this));
 
-		// Code block processor  
+		// Code block processor
 		this.registerMarkdownCodeBlockProcessor(
 			'excalidraw',
 			(source, el, ctx) => {
@@ -33,7 +54,7 @@ export default class ObsidianDrawPlugin extends Plugin {
 			},
 		);
 
-		// Register command  
+		// Register command
 		registerCommands(this);
 	}
 
@@ -52,6 +73,65 @@ export default class ObsidianDrawPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	/**
+	 * Save all BinaryFiles from Excalidraw into the content folder.
+	 * Each file is saved as `{fileId}.{ext}` using its dataURL.
+	 * Returns the set of fileIds actually saved so the caller can reference them.
+	 */
+	async saveContentFiles(files: BinaryFiles): Promise<void> {
+		const adapter = this.app.vault.adapter;
+		if (!(await adapter.exists(this.contentDir))) {
+			await adapter.mkdir(this.contentDir);
+		}
+
+		for (const [fileId, fileData] of Object.entries(files)) {
+			if (!fileData?.dataURL) continue;
+
+			const ext = MIME_TO_EXT[fileData.mimeType] ?? 'bin';
+			const filePath = `${this.contentDir}/${fileId}.${ext}`;
+
+			// Write the dataURL directly — on reload we reconstruct the full BinaryFile
+			try {
+				await adapter.write(filePath, fileData.dataURL);
+			} catch (e) {
+				console.error(`[ObsidianDraw] Failed to save content file ${fileId}:`, e);
+			}
+		}
+	}
+
+	/**
+	 * Load all content files referenced by the given fileIds back into a BinaryFiles map.
+	 * Reads from the content folder and reconstructs dataURL strings.
+	 */
+	async loadContentFiles(fileIds: string[]): Promise<BinaryFiles> {
+		const adapter = this.app.vault.adapter;
+		const result: BinaryFiles = {};
+
+		for (const fileId of fileIds) {
+			// Try all known extensions
+			for (const [mime, ext] of Object.entries(MIME_TO_EXT)) {
+				const filePath = `${this.contentDir}/${fileId}.${ext}`;
+				if (await adapter.exists(filePath)) {
+					try {
+						const dataURL = await adapter.read(filePath);
+						result[fileId] = {
+							id: fileId as any,
+							dataURL: dataURL as any,
+							mimeType: mime as any,
+							created: Date.now(),
+							lastRetrieved: Date.now(),
+						};
+					} catch (e) {
+						console.error(`[ObsidianDraw] Failed to load content file ${fileId}:`, e);
+					}
+					break; // found it, move on to next fileId
+				}
+			}
+		}
+
+		return result;
 	}
 
 	async loadLibraryItems(): Promise<any[]> {
@@ -84,3 +164,4 @@ export default class ObsidianDrawPlugin extends Plugin {
 		return allLibraryItems;
 	}
 }
+

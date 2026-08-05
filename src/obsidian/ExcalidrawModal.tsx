@@ -15,10 +15,12 @@ export class ExcalidrawModal extends Modal {
 	private lastSavedJson: string;
 	private file: import('obsidian').TFile | null;
 	private saveTimeout: number | null = null;
+ 	private latestFiles: BinaryFiles = {};
+ 	private loadedFiles: BinaryFiles = {};
 
 	/**
-	 * @param blockIndex  0-based index of the excalidraw fence block inside the file.
-	 *                    Used to target the correct block when multiple blocks exist.
+	 * @param blockIndex   
+	 *                    
 	 */
 	constructor(
 		app: App,
@@ -33,10 +35,31 @@ export class ExcalidrawModal extends Modal {
 		this.modalEl.addClass('obsidian-draw__modal');
 	}
 
-	onOpen(): void {
+	async onOpen(): Promise<void> {
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.addClass('obsidian-draw__modal-body');
+
+ 		const data = this.initialData as any;
+		const fileIds: string[] = [];
+		if (data?.elements) {
+			for (const el of data.elements) {
+				if (el.type === 'image' && el.fileId) {
+					fileIds.push(el.fileId);
+				}
+			}
+		}
+		// Also load  
+		if (data?.files) {
+			for (const id of Object.keys(data.files)) {
+				if (!fileIds.includes(id)) fileIds.push(id);
+			}
+		}
+
+		if (fileIds.length > 0) {
+			this.loadedFiles = await this.plugin.loadContentFiles(fileIds);
+		}
+
 		this.reactRoot = createRoot(contentEl);
 		this.renderReact();
 	}
@@ -46,9 +69,17 @@ export class ExcalidrawModal extends Modal {
 		const isDark = document.body.classList.contains('theme-dark');
 		const theme = isDark ? 'dark' : 'light';
 
+ 		const initialDataWithFiles = {
+			...(this.initialData as any),
+			files: {
+				...(this.initialData as any)?.files,
+				...this.loadedFiles,
+			},
+		};
+
 		this.reactRoot.render(
 			<ExcalidrawWrapper
-				initialData={this.initialData as any}
+				initialData={initialDataWithFiles}
 				onSave={this.handleSave}
 				onExcalidrawAPI={async (api) => {
 					this.excalidrawApi = api;
@@ -77,10 +108,12 @@ export class ExcalidrawModal extends Modal {
 		if (this.excalidrawApi) {
 			const elements = this.excalidrawApi.getSceneElements();
 			const appState = this.excalidrawApi.getAppState();
+			const files = this.excalidrawApi.getFiles();
 			if (this.saveTimeout) {
 				window.clearTimeout(this.saveTimeout);
 			}
-			this.performSave(elements, appState as unknown as AppState);
+ 			const allFiles = { ...this.latestFiles, ...files };
+			this.performSave(elements, appState as unknown as AppState, allFiles);
 		}
 		this.reactRoot?.unmount();
 		this.reactRoot = null;
@@ -90,22 +123,48 @@ export class ExcalidrawModal extends Modal {
 	private handleSave = (
 		elements: readonly ExcalidrawElement[],
 		appState: AppState,
-		_files: BinaryFiles,
+		files: BinaryFiles,
 	): void => {
+ 		this.latestFiles = { ...this.latestFiles, ...files };
+
 		if (this.saveTimeout) {
 			window.clearTimeout(this.saveTimeout);
 		}
 		this.saveTimeout = window.setTimeout(() => {
-			this.performSave(elements, appState);
+			this.performSave(elements, appState, this.latestFiles);
 		}, 300);
 	};
 
 	private performSave = (
 		elements: readonly ExcalidrawElement[],
 		appState: AppState,
+		files: BinaryFiles,
 	): void => {
 		const savedAppState = { viewBackgroundColor: appState.viewBackgroundColor };
-		const newJson = JSON.stringify({ elements, appState: savedAppState }, null, 2);
+
+ 		const usedFileIds = new Set<string>();
+		for (const el of elements) {
+			if ((el as any).type === 'image' && (el as any).fileId) {
+				usedFileIds.add((el as any).fileId);
+			}
+		}
+
+ 		const filesIndex: Record<string, { mimeType: string; created: number }> = {};
+		for (const fileId of usedFileIds) {
+			const f = files[fileId];
+			if (f) {
+				filesIndex[fileId] = {
+					mimeType: f.mimeType,
+					created: f.created,
+				};
+			}
+		}
+
+		const newJson = JSON.stringify(
+			{ elements, appState: savedAppState, files: filesIndex },
+			null,
+			2,
+		);
 		if (newJson === this.lastSavedJson) return;
 
 		const targetFile = this.file;
@@ -113,11 +172,16 @@ export class ExcalidrawModal extends Modal {
 
 		this.lastSavedJson = newJson;
 
-		this.plugin.app.vault.process(targetFile, (content: string) => {
+ 		if (Object.keys(files).length > 0) {
+			this.plugin.saveContentFiles(files).catch((e) =>
+				console.error('[ObsidianDraw] Failed to save content files:', e),
+			);
+		}
+
+ 		this.plugin.app.vault.process(targetFile, (content: string) => {
 			const openFence = '```excalidraw\n';
 
-			// Find the blockIndex  
-			let searchPos = 0;
+ 			let searchPos = 0;
 			let foundCount = 0;
 			let fencePos = -1;
 
@@ -132,13 +196,12 @@ export class ExcalidrawModal extends Modal {
 				searchPos = idx + openFence.length;
 			}
 
-			if (fencePos === -1) return content; // block not found
+			if (fencePos === -1) return content;
 
 			const contentStart = fencePos + openFence.length;
 			const closeFenceIdx = content.indexOf('\n```', contentStart);
 			if (closeFenceIdx === -1) return content;
 
-			// Replace this 
 			return (
 				content.slice(0, contentStart) +
 				newJson +
