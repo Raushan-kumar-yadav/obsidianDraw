@@ -18,7 +18,6 @@ interface ExcalidrawCanvasPreviewProps {
 	onHeightChange?: (height: number) => void;
 }
 
- 
 export function ExcalidrawCanvasPreview({
 	elements,
 	appState,
@@ -32,27 +31,22 @@ export function ExcalidrawCanvasPreview({
 	const currentHeight = useRef(height);
 	currentHeight.current = height;
 
- 	useEffect(() => {
+	useEffect(() => {
 		setHeight(initialHeight);
 	}, [initialHeight]);
 
- 	useEffect(() => {
+	useEffect(() => {
 		const api = apiRef.current;
 		if (!api) return;
-		api.updateScene({ elements: elements as ExcalidrawElement[] });
- 		if (files && Object.keys(files).length > 0) {
-			try { api.addFiles(Object.values(files)); } catch {  }
+		api.updateScene({ elements });
+		if (files && Object.keys(files).length > 0) {
+			try { api.addFiles(Object.values(files)); } catch { /* ignore if files already added */ }
 		}
-		// Re-fit after update
-		requestAnimationFrame(() => {
-			apiRef.current?.scrollToContent(
-				elements as ExcalidrawElement[],
-				{ fitToContent: true, viewportZoomFactor: 0.9 },
-			);
+		window.requestAnimationFrame(() => {
+			apiRef.current?.scrollToContent(elements, { fitToContent: true, viewportZoomFactor: 0.9 });
 		});
 	}, [elements, files]);
 
-	// Resize handle  
 	const handleResizeStart = useCallback((e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -79,11 +73,10 @@ export function ExcalidrawCanvasPreview({
 
 	return (
 		<div className="obsidian-draw__preview-outer" style={{ height: `${height}px` }}>
-			 
 			<div className="obsidian-draw__canvas-preview-inner">
 				<Excalidraw
 					initialData={{
-						elements: elements as ExcalidrawElement[],
+						elements,
 						appState: {
 							viewBackgroundColor: appState?.viewBackgroundColor ?? (isDark ? '#1e1e2e' : '#ffffff'),
 						},
@@ -105,18 +98,14 @@ export function ExcalidrawCanvasPreview({
 					}}
 					excalidrawAPI={(api) => {
 						apiRef.current = api;
- 						requestAnimationFrame(() => {
-							requestAnimationFrame(() => {
-								api.scrollToContent(
-									elements as ExcalidrawElement[],
-									{ fitToContent: true, viewportZoomFactor: 0.9 },
-								);
+						window.requestAnimationFrame(() => {
+							window.requestAnimationFrame(() => {
+								api.scrollToContent(elements, { fitToContent: true, viewportZoomFactor: 0.9 });
 							});
 						});
 					}}
 				/>
 
-				 
 				<div
 					className="obsidian-draw__canvas-preview-edit-btn"
 					onClick={(e) => {
@@ -139,7 +128,6 @@ export function ExcalidrawCanvasPreview({
 				</div>
 			</div>
 
-			 
 			<div
 				className="obsidian-draw__preview-resize-handle"
 				onMouseDown={handleResizeStart}

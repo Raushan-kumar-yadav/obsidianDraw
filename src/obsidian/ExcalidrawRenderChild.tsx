@@ -42,12 +42,18 @@ function extractBlock(content: string, blockIndex: number): string | null {
 	return null;
 }
 
- function extractFileIds(source: string): string[] {
+interface ParsedSource {
+	elements?: ExcalidrawElement[];
+	files?: Record<string, { mimeType: string }>;
+}
+
+function extractFileIds(source: string): string[] {
 	try {
-		const parsed = JSON.parse(source) as { elements?: any[]; files?: Record<string, any> };
+		const parsed = JSON.parse(source) as ParsedSource;
 		const ids: string[] = [];
 		for (const el of parsed.elements ?? []) {
-			if (el.type === 'image' && el.fileId) ids.push(el.fileId);
+			const imgEl = el as ExcalidrawElement & { fileId?: string };
+			if (imgEl.type === 'image' && imgEl.fileId) ids.push(imgEl.fileId);
 		}
 		for (const id of Object.keys(parsed.files ?? {})) {
 			if (!ids.includes(id)) ids.push(id);
@@ -64,9 +70,9 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 	private appState: Partial<AppState> = {};
 	private initialData: object | null = null;
 	private blockIndex = 0;
- 	private previewFiles: BinaryFiles = {};
- 	private previewHeight = 300;
- 	private previewZoom = 1;
+	private previewFiles: BinaryFiles = {};
+	private previewHeight = 300;
+	private previewZoom = 1;
 
 	private get heightKey(): string {
 		return `${this.ctx.sourcePath}:${this.blockIndex}`;
@@ -88,31 +94,27 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 			this.blockIndex = computeBlockIndex(info.text, info.lineStart);
 		}
 
-		// Load persisted height  
 		const savedSettingsHeight = this.plugin.settings.previewHeights?.[this.heightKey];
 		this.previewHeight = savedSettingsHeight ?? this.plugin.settings.defaultCanvasHeight ?? 300;
- 
+
 		this.containerEl.empty();
 		const mountEl = this.containerEl.createDiv();
 		this.reactRoot = createRoot(mountEl);
 
-		// Load image files  
-		this.loadFilesAndRender();
+		void this.loadFilesAndRender();
 
-		// Re-render thumbnail
 		this.registerEvent(
 			this.plugin.app.vault.on('modify', (abstractFile: TAbstractFile) => {
 				if (!(abstractFile instanceof TFile)) return;
 				if (abstractFile.path !== this.ctx.sourcePath) return;
 
-				this.plugin.app.vault.read(abstractFile).then(async (content) => {
+				void this.plugin.app.vault.read(abstractFile).then(async (content) => {
 					const newSource = extractBlock(content, this.blockIndex);
 					if (newSource === null) return;
 					const changed = newSource.trim() !== this.source.trim();
 					this.source = newSource;
 					this.parseSource(newSource);
 
-					// Reload files if the source changed
 					if (changed) {
 						await this.loadFilesAndRender();
 					} else {
@@ -121,15 +123,14 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 				});
 			}),
 		);
- 
+
 		this.registerEvent(
-			(this.plugin.app.workspace as any).on(
+			(this.plugin.app.workspace as unknown as { on: (event: string, cb: () => void) => import('obsidian').EventRef }).on(
 				'obsidian-draw:preview-mode-changed',
 				() => { this.renderPreview(); },
 			),
 		);
 	}
-
 
 	onunload(): void {
 		this.reactRoot?.unmount();
@@ -158,7 +159,7 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 			this.initialData = parsed;
 			this.elements  = parsed.elements  ?? [];
 			this.appState  = parsed.appState  ?? {};
- 			if (typeof parsed.previewHeight === 'number') this.previewHeight = parsed.previewHeight;
+			if (typeof parsed.previewHeight === 'number') this.previewHeight = parsed.previewHeight;
 			if (typeof parsed.previewZoom   === 'number') this.previewZoom   = parsed.previewZoom;
 		} catch (e) {
 			console.error('[ObsidianDraw] RenderChild: failed to parse JSON:', e);
@@ -182,59 +183,62 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 		);
 	}
 
- 	private savePreviewState = async (updates: { previewHeight?: number; previewZoom?: number }): Promise<void> => {
-		const file = this.plugin.app.vault.getFileByPath(this.ctx.sourcePath);
-		if (!file) return;
+	private savePreviewState = async (updates: { previewHeight?: number; previewZoom?: number }): Promise<void> => {
+		const file = this.plugin.app.vault.getAbstractFileByPath(this.ctx.sourcePath);
+		if (!(file instanceof TFile)) return;
 
 		if (updates.previewHeight !== undefined) this.previewHeight = updates.previewHeight;
 		if (updates.previewZoom   !== undefined) this.previewZoom   = updates.previewZoom;
 
-		await this.plugin.app.vault.process(file, (content) => {
-			const openFence = '```excalidraw\n';
-			let searchPos = 0;
-			let foundCount = 0;
+		const content = await this.plugin.app.vault.read(file);
+		const openFence = '```excalidraw\n';
+		let searchPos = 0;
+		let foundCount = 0;
 
-			while (searchPos < content.length) {
-				const fencePos = content.indexOf(openFence, searchPos);
-				if (fencePos === -1) break;
+		let newContent = content;
+		while (searchPos < content.length) {
+			const fencePos = content.indexOf(openFence, searchPos);
+			if (fencePos === -1) break;
 
-				const contentStart = fencePos + openFence.length;
-				const closeFenceIdx = content.indexOf('\n```', contentStart);
-				if (closeFenceIdx === -1) break;
+			const contentStart = fencePos + openFence.length;
+			const closeFenceIdx = content.indexOf('\n```', contentStart);
+			if (closeFenceIdx === -1) break;
 
-				if (foundCount === this.blockIndex) {
-					try {
-						const parsed = JSON.parse(content.slice(contentStart, closeFenceIdx)) as Record<string, unknown>;
-						if (updates.previewHeight !== undefined) parsed.previewHeight = updates.previewHeight;
-						if (updates.previewZoom   !== undefined) parsed.previewZoom   = updates.previewZoom;
-						return (
-							content.slice(0, contentStart) +
-							JSON.stringify(parsed, null, 2) +
-							content.slice(closeFenceIdx)
-						);
-					} catch {
-						return content;
-					}
+			if (foundCount === this.blockIndex) {
+				try {
+					const parsed = JSON.parse(content.slice(contentStart, closeFenceIdx)) as Record<string, unknown>;
+					if (updates.previewHeight !== undefined) parsed.previewHeight = updates.previewHeight;
+					if (updates.previewZoom   !== undefined) parsed.previewZoom   = updates.previewZoom;
+					newContent = (
+						content.slice(0, contentStart) +
+						JSON.stringify(parsed, null, 2) +
+						content.slice(closeFenceIdx)
+					);
+				} catch {
+					// leave content unchanged on parse error
 				}
-
-				foundCount++;
-				searchPos = closeFenceIdx + '\n```'.length;
+				break;
 			}
-			return content;
-		});
+
+			foundCount++;
+			searchPos = closeFenceIdx + '\n```'.length;
+		}
+
+		if (newContent !== content) {
+			await this.plugin.app.vault.modify(file, newContent);
+		}
 	};
 
 	private savePreviewHeight = (height: number) => this.savePreviewState({ previewHeight: height });
 	private savePreviewZoom   = (zoom: number)   => this.savePreviewState({ previewZoom: zoom });
 
 	private openModal = (): void => {
-		// Re-derive block index  
 		const info = this.ctx.getSectionInfo(this.containerEl);
 		if (info) {
 			this.blockIndex = computeBlockIndex(info.text, info.lineStart);
 		}
 
- 		const scrollEl = this.findScrollContainer();
+		const scrollEl = this.findScrollContainer();
 		const savedScrollTop = scrollEl?.scrollTop ?? 0;
 
 		new ExcalidrawModal(
@@ -244,11 +248,8 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 			this.source.trim(),
 			this.blockIndex,
 			() => {
-				// Restore the exact scroll position after the modal closes.
-				// Use two rAF passes: first lets Obsidian re-render the view,
-				// second fires after that repaint settles.
-				requestAnimationFrame(() => {
-					requestAnimationFrame(() => {
+				window.requestAnimationFrame(() => {
+					window.requestAnimationFrame(() => {
 						if (scrollEl) {
 							scrollEl.scrollTop = savedScrollTop;
 						}
@@ -258,7 +259,6 @@ export class ExcalidrawRenderChild extends MarkdownRenderChild {
 		).open();
 	};
 
-	/** Walk up the DOM to find the first scrollable ancestor. */
 	private findScrollContainer(): HTMLElement | null {
 		let el: HTMLElement | null = this.containerEl.parentElement;
 		while (el) {

@@ -1,4 +1,4 @@
-import { App, Modal } from 'obsidian';
+import { App, Modal, TFile } from 'obsidian';
 import { createRoot, Root } from 'react-dom/client';
 import { ExcalidrawWrapper } from '../components/ExcalidrawWrapper';
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
@@ -9,26 +9,30 @@ import type {
 } from '@excalidraw/excalidraw/dist/types/excalidraw/types';
 import type ObsidianDrawPlugin from '../main';
 
+export interface ParsedCanvasData {
+	elements?: ExcalidrawElement[];
+	appState?: { viewBackgroundColor?: string };
+	files?: Record<string, { mimeType: string; created: number }>;
+	previewHeight?: number;
+	previewZoom?: number;
+}
+
 export class ExcalidrawModal extends Modal {
 	private reactRoot: Root | null = null;
 	private excalidrawApi: ExcalidrawImperativeAPI | null = null;
 	private lastSavedJson: string;
-	private file: import('obsidian').TFile | null;
+	private file: TFile | null;
 	private saveTimeout: number | null = null;
- 	private latestFiles: BinaryFiles = {};
- 	private loadedFiles: BinaryFiles = {};
+	private latestFiles: BinaryFiles = {};
+	private loadedFiles: BinaryFiles = {};
 
-	/**
-	 * @param blockIndex   
-	 *                    
-	 */
 	constructor(
 		app: App,
 		private readonly plugin: ObsidianDrawPlugin,
-		private readonly initialData: object | null,
+		private readonly initialData: ParsedCanvasData | null,
 		initialJson: string,
 		private readonly blockIndex: number = 0,
- 		private readonly onAfterClose?: () => void,
+		private readonly onAfterClose?: () => void,
 	) {
 		super(app);
 		this.lastSavedJson = initialJson;
@@ -41,20 +45,15 @@ export class ExcalidrawModal extends Modal {
 		contentEl.empty();
 		contentEl.addClass('obsidian-draw__modal-body');
 
- 		const data = this.initialData as any;
 		const fileIds: string[] = [];
-		if (data?.elements) {
-			for (const el of data.elements) {
-				if (el.type === 'image' && el.fileId) {
-					fileIds.push(el.fileId);
-				}
+		for (const el of this.initialData?.elements ?? []) {
+			const imgEl = el as ExcalidrawElement & { fileId?: string };
+			if (imgEl.type === 'image' && imgEl.fileId) {
+				fileIds.push(imgEl.fileId);
 			}
 		}
-		// Also load  
-		if (data?.files) {
-			for (const id of Object.keys(data.files)) {
-				if (!fileIds.includes(id)) fileIds.push(id);
-			}
+		for (const id of Object.keys(this.initialData?.files ?? {})) {
+			if (!fileIds.includes(id)) fileIds.push(id);
 		}
 
 		if (fileIds.length > 0) {
@@ -70,36 +69,37 @@ export class ExcalidrawModal extends Modal {
 		const isDark = document.body.classList.contains('theme-dark');
 		const theme = isDark ? 'dark' : 'light';
 
- 		const initialDataWithFiles = {
-			...(this.initialData as any),
+		const initialDataWithFiles = {
+			...this.initialData,
 			files: {
-				...(this.initialData as any)?.files,
 				...this.loadedFiles,
-			},
+			} as BinaryFiles,
 		};
 
 		this.reactRoot.render(
 			<ExcalidrawWrapper
 				initialData={initialDataWithFiles}
 				onSave={this.handleSave}
-				onExcalidrawAPI={async (api) => {
+				onExcalidrawAPI={(api) => {
 					this.excalidrawApi = api;
-					const items = await this.plugin.loadLibraryItems();
-					if (items.length > 0) {
-						api.updateLibrary({ libraryItems: items, merge: true });
-					}
+					void this.plugin.loadLibraryItems().then((items) => {
+						if (items.length > 0) {
+							api.updateLibrary({ libraryItems: items as unknown as Parameters<typeof api.updateLibrary>[0]['libraryItems'], merge: true });
+						}
+					});
 				}}
 				theme={theme}
 				transparentBackground={this.plugin.settings.transparentBackground}
-				onToggleTransparentBackground={async (val) => {
+				onToggleTransparentBackground={(val) => {
 					this.plugin.settings.transparentBackground = val;
-					await this.plugin.saveSettings();
-					if (this.excalidrawApi) {
-						this.excalidrawApi.updateScene({
-							appState: { viewBackgroundColor: val ? '#00000000' : '#ffffff' }
-						});
-					}
-					this.renderReact();
+					void this.plugin.saveSettings().then(() => {
+						if (this.excalidrawApi) {
+							this.excalidrawApi.updateScene({
+								appState: { viewBackgroundColor: val ? '#00000000' : '#ffffff' }
+							});
+						}
+						this.renderReact();
+					});
 				}}
 			/>,
 		);
@@ -119,7 +119,6 @@ export class ExcalidrawModal extends Modal {
 		this.reactRoot?.unmount();
 		this.reactRoot = null;
 		this.contentEl.empty();
-		// Notify caller so it can restore scroll position
 		this.onAfterClose?.();
 	}
 
@@ -128,7 +127,7 @@ export class ExcalidrawModal extends Modal {
 		appState: AppState,
 		files: BinaryFiles,
 	): void => {
- 		this.latestFiles = { ...this.latestFiles, ...files };
+		this.latestFiles = { ...this.latestFiles, ...files };
 
 		if (this.saveTimeout) {
 			window.clearTimeout(this.saveTimeout);
@@ -145,36 +144,33 @@ export class ExcalidrawModal extends Modal {
 	): void => {
 		const savedAppState = { viewBackgroundColor: appState.viewBackgroundColor };
 
- 		const usedFileIds = new Set<string>();
+		const usedFileIds = new Set<string>();
 		for (const el of elements) {
-			if ((el as any).type === 'image' && (el as any).fileId) {
-				usedFileIds.add((el as any).fileId);
+			const imgEl = el as ExcalidrawElement & { fileId?: string };
+			if (imgEl.type === 'image' && imgEl.fileId) {
+				usedFileIds.add(imgEl.fileId);
 			}
 		}
 
- 		const filesIndex: Record<string, { mimeType: string; created: number }> = {};
+		const filesIndex: Record<string, { mimeType: string; created: number }> = {};
 		for (const fileId of usedFileIds) {
 			const f = files[fileId];
 			if (f) {
-				filesIndex[fileId] = {
-					mimeType: f.mimeType,
-					created: f.created,
-				};
+				filesIndex[fileId] = { mimeType: f.mimeType, created: f.created };
 			}
 		}
 
 		const targetFile = this.file;
 		if (!targetFile) return;
 
- 		if (Object.keys(files).length > 0) {
-			this.plugin.saveContentFiles(files).catch((e) =>
+		if (Object.keys(files).length > 0) {
+			void this.plugin.saveContentFiles(files).catch((e: unknown) =>
 				console.error('[ObsidianDraw] Failed to save content files:', e),
 			);
 		}
 
- 		this.plugin.app.vault.process(targetFile, (content: string) => {
+		void this.plugin.app.vault.read(targetFile).then((content) => {
 			const openFence = '```excalidraw\n';
-
 			let searchPos = 0;
 			let foundCount = 0;
 			let fencePos = -1;
@@ -190,29 +186,32 @@ export class ExcalidrawModal extends Modal {
 				searchPos = idx + openFence.length;
 			}
 
-			if (fencePos === -1) return content;
+			if (fencePos === -1) return;
 
 			const contentStart = fencePos + openFence.length;
 			const closeFenceIdx = content.indexOf('\n```', contentStart);
-			if (closeFenceIdx === -1) return content;
+			if (closeFenceIdx === -1) return;
 
-		 
 			let previewExtras: Record<string, unknown> = {};
 			try {
-				const existing = JSON.parse(content.slice(contentStart, closeFenceIdx)) as Record<string, unknown>;
+				const existing = JSON.parse(content.slice(contentStart, closeFenceIdx)) as ParsedCanvasData;
 				if (existing.previewHeight !== undefined) previewExtras.previewHeight = existing.previewHeight;
 				if (existing.previewZoom   !== undefined) previewExtras.previewZoom   = existing.previewZoom;
-			} catch { }
+			} catch {
+				// ignore parse errors
+			}
 
 			const payload = { elements, appState: savedAppState, files: filesIndex, ...previewExtras };
 			const finalJson = JSON.stringify(payload, null, 2);
 			this.lastSavedJson = finalJson;
 
-			return (
+			const newContent = (
 				content.slice(0, contentStart) +
 				finalJson +
 				content.slice(closeFenceIdx)
 			);
+
+			void this.plugin.app.vault.modify(targetFile, newContent);
 		});
 	};
 }

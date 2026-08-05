@@ -1,35 +1,34 @@
-import { App, PluginSettingTab, Setting, TFile } from 'obsidian';
-import MyPlugin from '../main';
+import { App, PluginSettingTab, Setting } from 'obsidian';
+import ObsidianDrawPlugin from '../main';
 
-export interface MyPluginSettings {
+export interface ObsidianDrawSettings {
 	transparentBackground: boolean;
- 	previewHeights: Record<string, number>;
- 	renderThumbnailInCanvas: boolean;
- 	defaultCanvasHeight: number;
+	previewHeights: Record<string, number>;
+	renderThumbnailInCanvas: boolean;
+	defaultCanvasHeight: number;
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
+export const DEFAULT_SETTINGS: ObsidianDrawSettings = {
 	transparentBackground: true,
 	previewHeights: {},
 	renderThumbnailInCanvas: false,
 	defaultCanvasHeight: 300,
 };
 
-export class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+export class ObsidianDrawSettingTab extends PluginSettingTab {
+	plugin: ObsidianDrawPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: ObsidianDrawPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
-	async display(): Promise<void> {
+	display(): void {
 		const { containerEl } = this;
-
 		containerEl.empty();
 		containerEl.addClass('obsidian-draw-settings-tab');
 
- 		await this.renderLibraryList(containerEl);
+		void this.renderLibraryList(containerEl);
 
 		new Setting(containerEl)
 			.setName('Transparent background')
@@ -45,14 +44,14 @@ export class SampleSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Render thumbnail in canvas')
-			.setDesc('When on, previews use a live interactive Excalidraw canvas (zoom/pan enabled). When off, a static image is used (default, lighter).')
+			.setDesc('When on, previews use a live interactive Excalidraw canvas. When off, a static image is used (default, lighter).')
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.renderThumbnailInCanvas)
 					.onChange(async (value) => {
 						this.plugin.settings.renderThumbnailInCanvas = value;
 						await this.plugin.saveSettings();
- 						(this.app.workspace as any).trigger('obsidian-draw:preview-mode-changed');
+						(this.app.workspace as unknown as { trigger: (event: string) => void }).trigger('obsidian-draw:preview-mode-changed');
 					}),
 			);
 
@@ -77,53 +76,32 @@ export class SampleSettingTab extends PluginSettingTab {
 		return `${this.plugin.manifest.dir}/libraries`;
 	}
 
-	private async renderLibraryList(containerEl: HTMLElement) {
+	private async renderLibraryList(containerEl: HTMLElement): Promise<void> {
 		const folderPath = this.getLibraryFolder();
 		const adapter = this.app.vault.adapter;
-		
+
 		let filesInFolder: string[] = [];
 		if (await adapter.exists(folderPath)) {
 			const listed = await adapter.list(folderPath);
 			filesInFolder = listed.files.filter((f) => f.endsWith('.excalidrawlib'));
 		}
 
-		const listContainer = containerEl.createDiv({ cls: 'obsidian-draw-library-list-container' });
-		listContainer.style.marginTop = '10px';
-		listContainer.style.marginBottom = '20px';
-		listContainer.style.padding = '10px';
-		listContainer.style.backgroundColor = 'var(--background-secondary)';
-		listContainer.style.borderRadius = '8px';
-		listContainer.style.border = '1px solid var(--background-modifier-border)';
+		new Setting(containerEl).setName('Installed Libraries').setHeading();
 
-		const header = listContainer.createDiv({ cls: 'obsidian-draw-library-list-header' });
-		header.style.display = 'flex';
-		header.style.justifyContent = 'space-between';
-		header.style.alignItems = 'center';
-		header.style.marginBottom = '10px';
+		const importLabel = containerEl.createEl('label', {
+			cls: 'obsidian-draw-library-import-label',
+			text: 'Import .excalidrawlib',
+		});
 
-		const title = header.createEl('h4', { text: 'Installed Libraries' });
-		title.style.margin = '0';
-
-		const importLabel = header.createEl('label', { text: 'Import .excalidrawlib' });
-		importLabel.style.cursor = 'pointer';
-		importLabel.style.backgroundColor = 'var(--interactive-accent)';
-		importLabel.style.color = 'var(--text-on-accent)';
-		importLabel.style.padding = '4px 12px';
-		importLabel.style.borderRadius = '4px';
-		importLabel.style.fontSize = '13px';
-		importLabel.style.fontWeight = '600';
-
-		const importInput = importLabel.createEl('input');
+		const importInput = importLabel.createEl('input', { cls: 'obsidian-draw-library-import-input' });
 		importInput.type = 'file';
 		importInput.accept = '.excalidrawlib';
 		importInput.multiple = true;
-		importInput.style.display = 'none';
 
 		importInput.onchange = async (e) => {
 			const files = (e.target as HTMLInputElement).files;
 			if (!files || files.length === 0) return;
 
-			// Ensure the target folder exists
 			if (!(await adapter.exists(folderPath))) {
 				await adapter.mkdir(folderPath);
 			}
@@ -139,51 +117,42 @@ export class SampleSettingTab extends PluginSettingTab {
 
 				while (await adapter.exists(deduplicatedPath)) {
 					const nameWithoutExt = file.name.replace(/\.excalidrawlib$/, '');
-					const newName = `${nameWithoutExt} (${counter}).excalidrawlib`;
-					deduplicatedPath = `${folderPath}/${newName}`;
+					deduplicatedPath = `${folderPath}/${nameWithoutExt} (${counter}).excalidrawlib`;
 					counter++;
 				}
 
 				try {
 					await adapter.writeBinary(deduplicatedPath, buffer);
 				} catch (err) {
-					console.error(`[ObsidianDraw] Failed to create file ${deduplicatedPath}:`, err);
+					console.error(`[ObsidianDraw] Failed to import library ${deduplicatedPath}:`, err);
 				}
 			}
 
-			this.display(); 
+			this.display();
 		};
 
 		if (filesInFolder.length > 0) {
-			const ul = listContainer.createEl('ul', { cls: 'obsidian-draw-library-list' });
-			ul.style.listStyleType = 'none';
-			ul.style.padding = '0';
-			ul.style.margin = '0';
+			const ul = containerEl.createEl('ul', { cls: 'obsidian-draw-library-list' });
 
 			filesInFolder.forEach((filePath) => {
-				const fileName = filePath.split('/').pop() || filePath;
-				const li = ul.createEl('li');
-				li.style.display = 'flex';
-				li.style.justifyContent = 'space-between';
-				li.style.alignItems = 'center';
-				li.style.padding = '6px 0';
-				li.style.borderBottom = '1px solid var(--background-modifier-border)';
-
+				const fileName = filePath.split('/').pop() ?? filePath;
+				const li = ul.createEl('li', { cls: 'obsidian-draw-library-list-item' });
 				li.createSpan({ text: fileName });
-				const delBtn = li.createEl('button', { text: 'Delete' });
-				delBtn.style.backgroundColor = 'var(--background-modifier-error)';
-				delBtn.style.color = 'var(--text-on-accent)';
+
+				const delBtn = li.createEl('button', {
+					text: 'Delete',
+					cls: 'obsidian-draw-library-delete-btn',
+				});
 				delBtn.onclick = async () => {
 					await adapter.remove(filePath);
-					this.display(); // re-render list
+					this.display();
 				};
 			});
 		} else {
-			const emptyState = listContainer.createDiv();
-			emptyState.style.color = 'var(--text-muted)';
-			emptyState.style.fontStyle = 'italic';
-			emptyState.style.padding = '10px 0';
-			emptyState.innerText = `No libraries found. Click import to add one.`;
+			containerEl.createDiv({
+				cls: 'obsidian-draw-library-empty',
+				text: 'No libraries found. Click Import to add one.',
+			});
 		}
 	}
 }

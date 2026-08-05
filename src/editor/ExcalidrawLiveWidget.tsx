@@ -3,15 +3,22 @@ import { createRoot, Root } from 'react-dom/client';
 import { ExcalidrawPreview } from '../components/ExcalidrawPreview';
 import { ExcalidrawModal } from '../obsidian/ExcalidrawModal';
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
-import type { BinaryFiles } from '@excalidraw/excalidraw/dist/types/excalidraw/types';
+import type { AppState, BinaryFiles } from '@excalidraw/excalidraw/dist/types/excalidraw/types';
 import type ObsidianDrawPlugin from '../main';
+
+interface ParsedSource {
+	elements?: ExcalidrawElement[];
+	appState?: Partial<AppState>;
+	files?: Record<string, { mimeType: string; created?: number }>;
+}
 
 function extractFileIds(source: string): string[] {
 	try {
-		const parsed = JSON.parse(source) as { elements?: any[]; files?: Record<string, any> };
+		const parsed = JSON.parse(source) as ParsedSource;
 		const ids: string[] = [];
 		for (const el of parsed.elements ?? []) {
-			if (el.type === 'image' && el.fileId) ids.push(el.fileId);
+			const imgEl = el as ExcalidrawElement & { fileId?: string };
+			if (imgEl.type === 'image' && imgEl.fileId) ids.push(imgEl.fileId);
 		}
 		for (const id of Object.keys(parsed.files ?? {})) {
 			if (!ids.includes(id)) ids.push(id);
@@ -25,8 +32,8 @@ function extractFileIds(source: string): string[] {
 export class ExcalidrawLiveWidget extends WidgetType {
 	private reactRoot: Root | null = null;
 	private elements: readonly ExcalidrawElement[] = [];
-	private appState: any = {};
-	private initialData: object | null = null;
+	private appState: Partial<AppState> = {};
+	private initialData: ParsedSource | null = null;
 	private previewFiles: BinaryFiles = {};
 
 	constructor(
@@ -36,8 +43,7 @@ export class ExcalidrawLiveWidget extends WidgetType {
 	) {
 		super();
 		this.parseSource(source);
-		// Pre-load images asynchronously
-		this.loadFiles();
+		void this.loadFiles();
 	}
 
 	eq(other: ExcalidrawLiveWidget): boolean {
@@ -45,7 +51,7 @@ export class ExcalidrawLiveWidget extends WidgetType {
 	}
 
 	toDOM(_view: EditorView): HTMLElement {
-		const container = document.createElement('div');
+		const container = createDiv();
 		this.reactRoot = createRoot(container);
 		this.renderPreview();
 		return container;
@@ -60,7 +66,6 @@ export class ExcalidrawLiveWidget extends WidgetType {
 		const fileIds = extractFileIds(this.source);
 		if (fileIds.length > 0) {
 			this.previewFiles = await this.plugin.loadContentFiles(fileIds);
-			// Re-render once files are loaded
 			this.renderPreview();
 		}
 	}
@@ -68,7 +73,7 @@ export class ExcalidrawLiveWidget extends WidgetType {
 	private parseSource(source: string): void {
 		if (!source.trim()) return;
 		try {
-			const parsed = JSON.parse(source) as { elements?: ExcalidrawElement[], appState?: any };
+			const parsed = JSON.parse(source) as ParsedSource;
 			this.initialData = parsed;
 			this.elements = parsed.elements ?? [];
 			this.appState = parsed.appState ?? {};
@@ -94,7 +99,7 @@ export class ExcalidrawLiveWidget extends WidgetType {
 		new ExcalidrawModal(
 			this.plugin.app,
 			this.plugin,
-			this.initialData,
+			this.initialData as unknown as import('../obsidian/ExcalidrawModal').ParsedCanvasData | null,
 			this.source.trim(),
 			this.blockIndex,
 		).open();

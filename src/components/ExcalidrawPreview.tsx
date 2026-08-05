@@ -74,7 +74,7 @@ export function ExcalidrawPreview({
 		const isDark = document.body.classList.contains('theme-dark');
 
 		exportToCanvas({
-			elements: active as ExcalidrawElement[],
+			elements: active,
 			appState: {
 				exportWithDarkMode: isDark,
 				exportBackground: true,
@@ -134,7 +134,7 @@ export function ExcalidrawPreview({
 					<>
 						<img src={previewUrl} alt="Drawing preview" className="obsidian-draw__preview-img" />
 						<div className="obsidian-draw__preview-hover-hint">✏️ Edit</div>
-						<div style={{ position: 'absolute', inset: 0, zIndex: 3 }} />
+						<div className="obsidian-draw__preview-overlay" />
 					</>
 				) : emptyState}
 			</div>

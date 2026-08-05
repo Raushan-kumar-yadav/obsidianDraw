@@ -2,7 +2,7 @@
 	"id": "canvas-draw",
 	"name": "CanvasDraw",
 	"version": "1.0.0",
-	"minAppVersion": "1.0.0",
+	"minAppVersion": "1.4.0",
 	"description": "Seamless inline Excalidraw integration with full drawing tools, library management, and custom canvas controls.",
 	"author": "Raushan Kumar Yadav",
 	"authorUrl": "https://github.com/Raushan-kumar-yadav",

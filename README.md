@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎨 ObsidianDraw
+# 🎨 CanvasDraw
 
 **Seamless, lightweight, and powerful Excalidraw integration for Obsidian.**
 

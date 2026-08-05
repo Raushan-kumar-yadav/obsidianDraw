@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
 import type {
@@ -34,8 +34,6 @@ export function ExcalidrawWrapper({
 	transparentBackground,
 	onToggleTransparentBackground,
 }: ExcalidrawWrapperProps) {
-	const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
 	// Force transparent background on load if enabled
 	const data = { ...(initialData ?? {}) };
 	if (transparentBackground) {
