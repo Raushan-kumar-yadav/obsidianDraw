@@ -90,6 +90,13 @@ Configure your drawing preferences in **Settings → Community plugins → Canva
 
 ---
 
+### 7. PDF & Print Export
+With **Transparent Background** mode enabled, your drawings render with a white/clean background in Obsidian's PDF exports and print output — no dark canvas, just the drawing itself.
+
+![CanvasDraw PDF export output](./assets/pdfOutput.png)
+
+---
+
 ## 🚀 Getting Started
 
 ### Creating a Drawing
