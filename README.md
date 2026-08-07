@@ -13,7 +13,9 @@ Embed interactive drawings, system architecture diagrams, mind maps, and sketche
 
 <br/>
 
-![CanvasDraw inline drawing in Obsidian note](./assets/inline-preview1.png)
+[![Watch the Demo on YouTube](https://img.youtube.com/vi/qfLODqVjGvE/maxresdefault.jpg)](https://youtu.be/qfLODqVjGvE)
+
+> 🎬 **[Watch the full demo on YouTube →](https://youtu.be/qfLODqVjGvE)**
 
 </div>
 
