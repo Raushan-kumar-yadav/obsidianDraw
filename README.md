@@ -39,8 +39,6 @@ Embed interactive drawings, system architecture diagrams, mind maps, and sketche
 <a href="https://youtu.be/qfLODqVjGvE">
   <img src="https://img.shields.io/badge/🎬%20Watch%20Full%20Demo%20on%20YouTube-6965DB?style=flat-square&logoColor=white" alt="Watch on YouTube" height="28"/>
 </a>
-&nbsp;&nbsp;
-<img src="https://img.shields.io/youtube/views/qfLODqVjGvE?style=flat-square&label=views&color=FF0000" alt="YouTube Views"/>
 </td>
 </tr>
 </table>
