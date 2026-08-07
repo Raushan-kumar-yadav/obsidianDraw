@@ -13,11 +13,42 @@ Embed interactive drawings, system architecture diagrams, mind maps, and sketche
 
 <br/>
 
-[![Watch the Demo on YouTube](https://img.youtube.com/vi/qfLODqVjGvE/maxresdefault.jpg)](https://youtu.be/qfLODqVjGvE)
+</div>
 
-> 🎬 **[Watch the full demo on YouTube →](https://youtu.be/qfLODqVjGvE)**
+<!-- ──────────────────────── VIDEO PREVIEW ──────────────────────── -->
+<div align="center">
+
+<table border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td align="center" bgcolor="#0d1117" style="padding: 8px 0 4px 0;">
+<img src="https://img.shields.io/badge/▶%20%20WATCH%20DEMO-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo" height="36"/>
+</td>
+</tr>
+<tr>
+<td align="center">
+<a href="https://youtu.be/qfLODqVjGvE" title="Watch CanvasDraw Demo on YouTube">
+  <img src="https://img.youtube.com/vi/qfLODqVjGvE/maxresdefault.jpg"
+       alt="CanvasDraw – Watch Demo on YouTube"
+       width="860"
+       style="border-radius:12px; border: 3px solid #6965DB;"/>
+</a>
+</td>
+</tr>
+<tr>
+<td align="center" bgcolor="#0d1117" style="padding: 6px 0 8px 0;">
+<a href="https://youtu.be/qfLODqVjGvE">
+  <img src="https://img.shields.io/badge/🎬%20Watch%20Full%20Demo%20on%20YouTube-6965DB?style=flat-square&logoColor=white" alt="Watch on YouTube" height="28"/>
+</a>
+&nbsp;&nbsp;
+<img src="https://img.shields.io/youtube/views/qfLODqVjGvE?style=flat-square&label=views&color=FF0000" alt="YouTube Views"/>
+</td>
+</tr>
+</table>
 
 </div>
+<!-- ─────────────────────────────────────────────────────────────── -->
+
+
 
 ---
 
